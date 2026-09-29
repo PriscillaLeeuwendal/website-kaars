@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product - Licht & Liefde</title>
+
+    <link rel="preconnect" href="https://app.snipcart.com">
+    <link rel="preconnect" href="https://cdn.snipcart.com">
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'Marseille';
+            src: url('fonts/Marseille.ttf') format('truetype');
+        }
+        body {
+            font-family: Georgia, serif;
+            margin: 0;
+            background: #fcfbfa;
+            color: #4a4543;
+            line-height: 1.6;
+        }
+        header {
+            background-image: linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)), url('images/hero-banner.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 80px 20px 40px;
+            text-align: center;
+            position: relative;
+            color: #fff;
+            border-bottom: 1px solid #e8e1da;
+        }
+        .cart-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #8c7b70;
+            color: #fff;
+            padding: 8px 14px;
+            font: .85em sans-serif;
+            text-decoration: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,.2);
+        }
+        .cart-link:hover {
+            background: #736359;
+            color: #fff;
+        }
+        header h1 {
+            font-family: 'Marseille', Georgia, serif;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .main-nav {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .main-nav a {
+            background: rgba(255,255,255,.2);
+            color: #fff;
+            padding: 8px 18px;
+            text-decoration: none;
+            border-radius: 20px;
+            font: .9em sans-serif;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,.4);
+        }
+        .main-nav a:hover,
+        .main-nav a.active {
+            background: rgba(255,255,255,.4);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            min-height: 250px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 25px;
+            color: #736359;
+        }
+        .product-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 45px;
+            align-items: start;
+        }
+        .product-photo {
+            width: 100%;
+            max-height: 580px;
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #e8e1da;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .product-info h2 {
+            margin: 0 0 10px;
+            font-family: 'Marseille', Georgia, serif;
+            font-size: 2.5em;
+            color: #3b3533;
+        }
+        .product-price {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 0 0 22px;
+        }
+        .product-description {
+            white-space: pre-line;
+            margin-bottom: 28px;
+        }
+        .snipcart-add-item {
+            background: #8c7b70;
+            color: #fff;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font: .95em sans-serif;
+        }
+        .snipcart-add-item:hover {
+            background: #736359;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: #f4efe9;
+            color: #7a706b;
+            font-size: .9em;
+            border-top: 1px solid #e8e1da;
+            margin-top: 50px;
+        }
+        @media (max-width: 700px) {
+            .product-layout {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .product-info h2 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="#cart" class="cart-link snipcart-checkout">Winkelmand (<span class="snipcart-items-count">0</span>)</a>
+
+        <h1>Product</h1>
+
+        <nav class="main-nav">
+            <a href="index.html">Home</a>
+            <a href="producten.html" class="active">Producten</a>
+            <a href="over-ons.html">Over ons</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="producten.html" class="back-link">← Terug naar producten</a>
+        <div id="product-detail" aria-live="polite">
+            <p>Product wordt geladen...</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+    </footer>
+
+    <script async src="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.js"></script>
+    <div hidden id="snipcart" data-api-key="NDdkMmZjYjAtYTI2NS00NDQ0LWFjYjgtMWNlMmVhNzgzZTMzNjM5MjQwNDE5ODk1NTAxNjE2"></div>
+
+    <script src="taal.js"></script>
+
+    <script>
+        const productSlug = new URLSearchParams(location.search).get('product');
+        let productData = null;
+
+        function renderProduct() {
+            if (!productData) return;
+
+            const en = window.siteLanguage.get() === 'en';
+
+            const title = en && productData.title_en
+                ? productData.title_en
+                : productData.title;
+
+            const description = en && productData.long_description_en
+                ? productData.long_description_en
+                : (!en && productData.long_description
+                    ? productData.long_description
+                    : (en && productData.description_en
+                        ? productData.description_en
+                        : productData.description || ''));
+
+            const container = document.getElementById('product-detail');
+            container.replaceChildren();
+
+            const layout = document.createElement('div');
+            layout.className = 'product-layout';
+
+            const image = document.createElement('img');
+            image.className = 'product-photo';
+            image.src = productData.image
+                ? productData.image.replace(/^\//, '')
+                : '';
+            image.alt = title;
+
+            const info = document.createElement('div');
+            info.className = 'product-info';
+
+            const heading = document.createElement('h2');
+            heading.textContent = title;
+
+            const price = document.createElement('p');
+            price.className = 'product-price';
+            price.textContent = `€ ${Number(productData.price).toFixed(2)}`;
+
+            const text = document.createElement('p');
+            text.className = 'product-description';
+            text.textContent = description;
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'snipcart-add-item';
+            button.textContent = window.siteLanguage.text('add');
+            button.setAttribute('data-item-id', productSlug);
+            button.setAttribute('data-item-price', productData.price);
+            button.setAttribute('data-item-url', 'producten.html');
+            button.setAttribute('data-item-name', title);
+
+            if (productData.image) {
+                button.setAttribute('data-item-image', productData.image);
+            }
+
+            info.append(heading, price, text, button);
+
+            if (productData.image) {
+                layout.append(image);
+            }
+
+            layout.append(info);
+            container.append(layout);
+
+            document.title = `${title} - Licht & Liefde`;
+        }
+
+        async function loadProduct() {
+            const container = document.getElementById('product-detail');
+
+            if (!productSlug || !/^[a-zA-Z0-9_-]+$/.test(productSlug)) {
+                container.textContent = window.siteLanguage.text('notFound');
+                return;
+            }
+
+            try {
+                const url = `https://api.github.com/repos/timdekruyf07-dotcom/website-kaars/contents/content/producten/${encodeURIComponent(productSlug)}.md`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Product niet gevonden');
+                }
+
+                const file = await response.json();
+                const fileResponse = await fetch(file.download_url);
+
+                if (!fileResponse.ok) {
+                    throw new Error('Productbestand niet gevonden');
+                }
+
+                const content = await fileResponse.text();
+                const parts = content.split('---');
+
+                if (parts.length < 3) {
+                    throw new Error('Ongeldig productbestand');
+                }
+
+                productData = jsyaml.load(parts[1]);
+
+                if (!productData ||
+                    !productData.title ||
+                    !Number.isFinite(Number(productData.price))) {
+                    throw new Error('Ongeldig product');
+                }
+
+                renderProduct();
+            } catch (error) {
+                container.textContent = window.siteLanguage.text('notFound');
+            }
+        }
+
+        loadProduct();
+
+        window.addEventListener('site-language-change', () => {
+            if (productData) {
+                renderProduct();
+            } else {
+                document.getElementById('product-detail').textContent =
+                    window.siteLanguage.text('notFound');
+            }
+        });
+    </script>
+</body>
+</html>
