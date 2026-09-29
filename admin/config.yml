@@ -18,4 +18,6 @@ collections:
       - {label: "Prijs", name: "price", widget: "number"}
       - {label: "Beschrijving", name: "description", widget: "text"}
       - {label: "Beschrijving Engels", name: "description_en", widget: "text", required: false}
+      - {label: "Uitgebreide omschrijving", name: "long_description", widget: "text", required: false}
+      - {label: "Uitgebreide omschrijving Engels", name: "long_description_en", widget: "text", required: false}
       - {label: "Afbeelding", name: "image", widget: "image"}
