@@ -46,7 +46,10 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .admin-btn:hover { background-color: #736359; color: white; }
+        .admin-btn:hover {
+            background-color: #736359;
+            color: white;
+        }
         .refresh-btn {
             position: absolute;
             top: 20px;
@@ -61,7 +64,9 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .refresh-btn:hover { background-color: #736359; }
+        .refresh-btn:hover {
+            background-color: #736359;
+        }
         .cart-link {
             position: absolute;
             top: 20px;
@@ -75,7 +80,9 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .cart-link:hover { background-color: #736359; }
+        .cart-link:hover {
+            background-color: #736359;
+        }
         header h1 {
             font-family: 'Marseille', Georgia, serif;
             font-size: 3em;
@@ -99,7 +106,8 @@
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
-        .main-nav a:hover, .main-nav a.active {
+        .main-nav a:hover,
+        .main-nav a.active {
             background-color: rgba(255, 255, 255, 0.4);
         }
         .container {
@@ -139,6 +147,15 @@
             border-radius: 4px;
             margin-bottom: 10px;
         }
+        .product-detail-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+        .product-detail-link:hover h3,
+        .product-detail-link:focus-visible h3 {
+            text-decoration: underline;
+        }
         .card h3 {
             margin-top: 0;
             color: #3b3533;
@@ -157,7 +174,9 @@
             font-size: 0.9em;
             text-align: center;
         }
-        .snipcart-add-item:hover { background-color: #736359 !important; }
+        .snipcart-add-item:hover {
+            background-color: #736359 !important;
+        }
         footer {
             text-align: center;
             padding: 30px;
@@ -223,6 +242,7 @@
                     if (file.name.endsWith('.md')) {
                         try {
                             const fileResponse = await fetch(file.download_url);
+
                             if (fileResponse.ok) {
                                 const fileText = await fileResponse.text();
                                 const parts = fileText.split('---');
@@ -231,22 +251,34 @@
                                     const data = jsyaml.load(parts[1]);
                                     const productId = file.name.replace('.md', '');
                                     const isEnglish = window.siteLanguage.get() === 'en';
-                                    const productTitle = isEnglish && data.title_en ? data.title_en : data.title;
-                                    const productDescription = isEnglish && data.description_en ? data.description_en : (data.description || '');
+
+                                    const productTitle = isEnglish && data.title_en
+                                        ? data.title_en
+                                        : data.title;
+
+                                    const productDescription = isEnglish && data.description_en
+                                        ? data.description_en
+                                        : (data.description || '');
 
                                     const card = document.createElement('div');
                                     card.className = 'card';
 
-                                    let imagePath = data.image ? data.image.replace(/^\//, '') : '';
-                                    let imageHtml = imagePath ? `<img src="${imagePath}" alt="${productTitle}">` : '';
+                                    let imagePath = data.image
+                                        ? data.image.replace(/^\//, '')
+                                        : '';
+
+                                    let imageHtml = imagePath
+                                        ? `<img src="${imagePath}" alt="${productTitle}">`
+                                        : '';
 
                                     card.innerHTML = `
-                                        <div>
+                                        <a class="product-detail-link" href="product.html?product=${encodeURIComponent(productId)}">
                                             ${imageHtml}
                                             <h3>${productTitle}</h3>
                                             <p>${productDescription}</p>
                                             <p><strong>€ ${Number(data.price).toFixed(2)}</strong></p>
-                                        </div>
+                                        </a>
+
                                         <button class="snipcart-add-item"
                                             data-item-id="${productId}"
                                             data-item-price="${data.price}"
@@ -256,6 +288,7 @@
                                             ${window.siteLanguage.text("add")}
                                         </button>
                                     `;
+
                                     productContainer.appendChild(card);
                                     foundCount++;
                                 }
@@ -267,15 +300,21 @@
                 }
 
                 if (foundCount === 0) {
-                    productContainer.innerHTML = `<p data-status="empty">${window.siteLanguage.text("empty")}</p>`;
+                    productContainer.innerHTML =
+                        `<p data-status="empty">${window.siteLanguage.text("empty")}</p>`;
                 }
             } catch (e) {
-                productContainer.innerHTML = `<p data-status="error" style="color: #a00;">${window.siteLanguage.text("error")}</p>`;
+                productContainer.innerHTML =
+                    `<p data-status="error" style="color: #a00;">${window.siteLanguage.text("error")}</p>`;
             }
         }
 
         loadProducts();
-        document.getElementById('refresh-products-btn').addEventListener('click', loadProducts);
+
+        document
+            .getElementById('refresh-products-btn')
+            .addEventListener('click', loadProducts);
+
         window.addEventListener('site-language-change', loadProducts);
     </script>
 </body>
