@@ -14,6 +14,8 @@ collections:
     create: true
     fields:
       - {label: "Titel", name: "title", widget: "string"}
+      - {label: "Titel Engels", name: "title_en", widget: "string", required: false}
       - {label: "Prijs", name: "price", widget: "number"}
       - {label: "Beschrijving", name: "description", widget: "text"}
+      - {label: "Beschrijving Engels", name: "description_en", widget: "text", required: false}
       - {label: "Afbeelding", name: "image", widget: "image"}
