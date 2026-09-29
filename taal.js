@@ -22,7 +22,10 @@
       empty: 'Nog geen producten gevonden.',
       error: 'Kon de producten niet laden.',
       add: 'In winkelmand',
-      refresh: '🔄 Ververs'
+      refresh: '🔄 Ververs',
+      detail: 'Product',
+      back: '← Terug naar producten',
+      notFound: 'Product niet gevonden.'
     },
     en: {
       cart: 'Cart (',
@@ -35,7 +38,10 @@
       empty: 'No products found yet.',
       error: 'Could not load the products.',
       add: 'Add to cart',
-      refresh: '🔄 Refresh'
+      refresh: '🔄 Refresh',
+      detail: 'Product',
+      back: '← Back to products',
+      notFound: 'Product not found.'
     }
   };
 
@@ -107,12 +113,18 @@
       if (status) status.textContent = t[status.dataset.status];
     }
 
+    if (page === 'product.html') {
+      set('header h1', t.detail);
+      set('.back-link', t.back);
+    }
+
     if (page === 'over-ons.html') {
       document.title = en
         ? 'About Us - Licht & Liefde'
         : 'Over Ons - Licht & Liefde';
 
       set('header h1', en ? 'About Us' : 'Over Ons');
+
       set('.container h2', en
         ? 'The story behind Licht & Liefde'
         : 'Het verhaal achter Licht & Liefde');
