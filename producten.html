@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Producten - Licht & Liefde</title>
-    
+
     <link rel="preconnect" href="https://app.snipcart.com">
     <link rel="preconnect" href="https://cdn.snipcart.com">
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css" />
@@ -175,7 +175,7 @@
         <a href="#cart" class="cart-link snipcart-checkout">Winkelmand (<span class="snipcart-items-count">0</span>)</a>
         <button id="refresh-products-btn" class="refresh-btn">🔄 Ververs</button>
         <a href="https://timdekruyf07-dotcom.github.io/website-kaars/admin/" class="admin-btn">Beheer</a>
-        
+
         <h1>Onze Producten</h1>
 
         <nav class="main-nav">
@@ -202,12 +202,14 @@
     <script async src="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.js"></script>
     <div hidden id="snipcart" data-api-key="NDdkMmZjYjAtYTI2NS00NDQ0LWFjYjgtMWNlMmVhNzgzZTMzNjM5MjQwNDE5ODk1NTAxNjE2"></div>
 
+    <script src="taal.js"></script>
+
     <script>
         async function loadProducts() {
             const productContainer = document.getElementById('product-list');
             const repo = "timdekruyf07-dotcom/website-kaars";
-            
-            productContainer.innerHTML = "<p style='color: #7a706b;'>Producten worden geladen...</p>";
+
+            productContainer.innerHTML = `<p data-status="loading" style="color: #7a706b;">${window.siteLanguage.text("loading")}</p>`;
 
             try {
                 const response = await fetch(`https://api.github.com/repos/${repo}/contents/content/producten`);
@@ -224,31 +226,34 @@
                             if (fileResponse.ok) {
                                 const fileText = await fileResponse.text();
                                 const parts = fileText.split('---');
-                                
+
                                 if (parts.length >= 3) {
                                     const data = jsyaml.load(parts[1]);
                                     const productId = file.name.replace('.md', '');
+                                    const isEnglish = window.siteLanguage.get() === 'en';
+                                    const productTitle = isEnglish && data.title_en ? data.title_en : data.title;
+                                    const productDescription = isEnglish && data.description_en ? data.description_en : (data.description || '');
 
                                     const card = document.createElement('div');
                                     card.className = 'card';
-                                    
+
                                     let imagePath = data.image ? data.image.replace(/^\//, '') : '';
-                                    let imageHtml = imagePath ? `<img src="${imagePath}" alt="${data.title}">` : '';
-                                    
+                                    let imageHtml = imagePath ? `<img src="${imagePath}" alt="${productTitle}">` : '';
+
                                     card.innerHTML = `
                                         <div>
                                             ${imageHtml}
-                                            <h3>${data.title}</h3>
-                                            <p>${data.description || ''}</p>
+                                            <h3>${productTitle}</h3>
+                                            <p>${productDescription}</p>
                                             <p><strong>€ ${Number(data.price).toFixed(2)}</strong></p>
                                         </div>
                                         <button class="snipcart-add-item"
                                             data-item-id="${productId}"
                                             data-item-price="${data.price}"
                                             data-item-url="producten.html"
-                                            data-item-name="${data.title}"
+                                            data-item-name="${productTitle}"
                                             data-item-image="${data.image || ''}">
-                                            In winkelmand
+                                            ${window.siteLanguage.text("add")}
                                         </button>
                                     `;
                                     productContainer.appendChild(card);
@@ -260,14 +265,18 @@
                         }
                     }
                 }
-                if (foundCount === 0) productContainer.innerHTML = "<p>Nog geen producten gevonden.</p>";
+
+                if (foundCount === 0) {
+                    productContainer.innerHTML = `<p data-status="empty">${window.siteLanguage.text("empty")}</p>`;
+                }
             } catch (e) {
-                productContainer.innerHTML = "<p style='color: #a00;'>Kon de producten niet laden.</p>";
+                productContainer.innerHTML = `<p data-status="error" style="color: #a00;">${window.siteLanguage.text("error")}</p>`;
             }
         }
 
         loadProducts();
         document.getElementById('refresh-products-btn').addEventListener('click', loadProducts);
+        window.addEventListener('site-language-change', loadProducts);
     </script>
 </body>
 </html>
