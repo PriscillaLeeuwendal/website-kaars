@@ -1,11 +1,35 @@
 <!doctype html>
-<html>
+<html lang="nl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Beheerscherm</title>
+
+  <style>
+    .voorraad-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      padding: 12px 18px;
+      background: #736359;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font: 14px Arial, sans-serif;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, .2);
+    }
+
+    .voorraad-link:hover {
+      background: #594c44;
+    }
+  </style>
 </head>
 <body>
+  <a class="voorraad-link" href="voorraad.html">
+    Voorraad beheren
+  </a>
+
   <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
 </body>
 </html>
