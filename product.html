@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://app.snipcart.com">
     <link rel="preconnect" href="https://cdn.snipcart.com">
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css" />
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 
     <style>
@@ -15,6 +15,7 @@
             font-family: 'Marseille';
             src: url('fonts/Marseille.ttf') format('truetype');
         }
+
         body {
             font-family: Georgia, serif;
             margin: 0;
@@ -22,6 +23,7 @@
             color: #4a4543;
             line-height: 1.6;
         }
+
         header {
             background-image: linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)), url('images/hero-banner.jpg');
             background-size: cover;
@@ -32,6 +34,7 @@
             color: #fff;
             border-bottom: 1px solid #e8e1da;
         }
+
         .cart-link {
             position: absolute;
             top: 20px;
@@ -44,15 +47,18 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,.2);
         }
+
         .cart-link:hover {
             background: #736359;
             color: #fff;
         }
+
         header h1 {
             font-family: 'Marseille', Georgia, serif;
             font-size: 3em;
             margin-bottom: 10px;
         }
+
         .main-nav {
             margin-top: 20px;
             display: flex;
@@ -60,6 +66,7 @@
             gap: 15px;
             flex-wrap: wrap;
         }
+
         .main-nav a {
             background: rgba(255,255,255,.2);
             color: #fff;
@@ -70,27 +77,32 @@
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255,255,255,.4);
         }
+
         .main-nav a:hover,
         .main-nav a.active {
             background: rgba(255,255,255,.4);
         }
+
         .container {
             max-width: 1000px;
             margin: 40px auto;
             padding: 0 20px;
             min-height: 250px;
         }
+
         .back-link {
             display: inline-block;
             margin-bottom: 25px;
             color: #736359;
         }
+
         .product-layout {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 45px;
             align-items: start;
         }
+
         .product-photo {
             width: 100%;
             max-height: 580px;
@@ -100,21 +112,44 @@
             border-radius: 8px;
             box-sizing: border-box;
         }
+
         .product-info h2 {
             margin: 0 0 10px;
             font-family: 'Marseille', Georgia, serif;
             font-size: 2.5em;
             color: #3b3533;
         }
+
         .product-price {
             font-size: 1.4em;
             font-weight: bold;
             margin: 0 0 22px;
         }
+
         .product-description {
             white-space: pre-line;
             margin-bottom: 28px;
         }
+
+        .stock-message {
+            padding: 12px 16px;
+            margin: 0 0 20px;
+            background: #f4efe9;
+            border: 1px solid #e8e1da;
+            border-radius: 6px;
+            font-size: .95em;
+        }
+
+        .stock-message.sold-out {
+            background: #faeeeb;
+            border-color: #e7c7bf;
+            color: #8b4437;
+        }
+
+        .stock-message.stock-neutral {
+            color: #7a706b;
+        }
+
         .snipcart-add-item {
             background: #8c7b70;
             color: #fff;
@@ -124,9 +159,16 @@
             cursor: pointer;
             font: .95em sans-serif;
         }
+
         .snipcart-add-item:hover {
             background: #736359;
         }
+
+        .snipcart-add-item:disabled {
+            background: #b6aaa2;
+            cursor: not-allowed;
+        }
+
         footer {
             text-align: center;
             padding: 30px;
@@ -136,11 +178,13 @@
             border-top: 1px solid #e8e1da;
             margin-top: 50px;
         }
+
         @media (max-width: 700px) {
             .product-layout {
                 grid-template-columns: 1fr;
                 gap: 24px;
             }
+
             .product-info h2 {
                 font-size: 2em;
             }
@@ -149,7 +193,9 @@
 </head>
 <body>
     <header>
-        <a href="#cart" class="cart-link snipcart-checkout">Winkelmand (<span class="snipcart-items-count">0</span>)</a>
+        <a href="#cart" class="cart-link snipcart-checkout">
+            Winkelmand (<span class="snipcart-items-count">0</span>)
+        </a>
 
         <h1>Product</h1>
 
@@ -163,6 +209,7 @@
 
     <main class="container">
         <a href="producten.html" class="back-link">← Terug naar producten</a>
+
         <div id="product-detail" aria-live="polite">
             <p>Product wordt geladen...</p>
         </div>
@@ -178,13 +225,94 @@
     <script src="taal.js"></script>
 
     <script>
-        const productSlug = new URLSearchParams(location.search).get('product');
+        const STOCK_API =
+            'https://licht-en-liefde-api.timdekruyf07.workers.dev';
+
+        const productSlug =
+            new URLSearchParams(location.search).get('product');
+
+        const validProductSlug =
+            Boolean(productSlug && /^[a-zA-Z0-9_-]+$/.test(productSlug));
+
         let productData = null;
+        let productLoadFailed = false;
+        let stockState = 'loading';
+        let availableStock = null;
+
+        function isEnglish() {
+            return window.siteLanguage.get() === 'en';
+        }
+
+        function updateStockDisplay() {
+            const message = document.getElementById('stock-message');
+            const button = document.getElementById('add-to-cart');
+
+            if (!message || !button) return;
+
+            const en = isEnglish();
+            message.className = 'stock-message';
+
+            // De bestaande winkelmand blijft beschikbaar voor producten
+            // waarvoor de voorraad nog niet is ingesteld.
+            button.disabled = false;
+            button.textContent = window.siteLanguage.text('add');
+            button.removeAttribute('data-item-max-quantity');
+
+            if (stockState === 'loading') {
+                message.classList.add('stock-neutral');
+                message.textContent = en
+                    ? 'Checking stock...'
+                    : 'Voorraad wordt opgehaald...';
+                button.disabled = true;
+                return;
+            }
+
+            if (stockState === 'missing') {
+                message.classList.add('stock-neutral');
+                message.textContent = en
+                    ? 'Stock information is not yet available for this product.'
+                    : 'Voor dit product is nog geen voorraadinformatie beschikbaar.';
+                return;
+            }
+
+            if (stockState === 'error') {
+                message.classList.add('stock-neutral');
+                message.textContent = en
+                    ? 'Stock information is temporarily unavailable.'
+                    : 'De voorraadinformatie is tijdelijk niet beschikbaar.';
+                return;
+            }
+
+            if (availableStock === 0) {
+                message.classList.add('sold-out');
+                message.textContent = en
+                    ? 'This product is currently sold out.'
+                    : 'Dit product is momenteel uitverkocht.';
+                button.disabled = true;
+                button.textContent = en ? 'Sold out' : 'Uitverkocht';
+                return;
+            }
+
+            button.setAttribute(
+                'data-item-max-quantity',
+                String(availableStock)
+            );
+
+            if (availableStock === 1) {
+                message.textContent = en
+                    ? 'Please note: only 1 left in stock!'
+                    : 'Let op: er is nog maar 1 van dit product over!';
+            } else {
+                message.textContent = en
+                    ? `Please note: only ${availableStock} left in stock!`
+                    : `Let op: er zijn nog ${availableStock} van dit product over!`;
+            }
+        }
 
         function renderProduct() {
             if (!productData) return;
 
-            const en = window.siteLanguage.get() === 'en';
+            const en = isEnglish();
 
             const title = en && productData.title_en
                 ? productData.title_en
@@ -225,7 +353,13 @@
             text.className = 'product-description';
             text.textContent = description;
 
+            const stockMessage = document.createElement('p');
+            stockMessage.id = 'stock-message';
+            stockMessage.className = 'stock-message';
+            stockMessage.setAttribute('role', 'status');
+
             const button = document.createElement('button');
+            button.id = 'add-to-cart';
             button.type = 'button';
             button.className = 'snipcart-add-item';
             button.textContent = window.siteLanguage.text('add');
@@ -238,7 +372,7 @@
                 button.setAttribute('data-item-image', productData.image);
             }
 
-            info.append(heading, price, text, button);
+            info.append(heading, price, text, stockMessage, button);
 
             if (productData.image) {
                 layout.append(image);
@@ -248,12 +382,61 @@
             container.append(layout);
 
             document.title = `${title} - Licht & Liefde`;
+            updateStockDisplay();
+        }
+
+        async function loadStock() {
+            if (!validProductSlug) return;
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const response = await fetch(
+                    `${STOCK_API}/stock?product=${encodeURIComponent(productSlug)}`,
+                    {
+                        cache: 'no-store',
+                        signal: controller.signal
+                    }
+                );
+
+                if (response.status === 404) {
+                    stockState = 'missing';
+                    availableStock = null;
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Voorraad ophalen mislukt');
+                }
+
+                const data = await response.json();
+
+                if (
+                    data.product_id !== productSlug ||
+                    !Number.isSafeInteger(data.available) ||
+                    data.available < 0
+                ) {
+                    throw new Error('Ongeldige voorraadinformatie');
+                }
+
+                availableStock = data.available;
+                stockState = 'ready';
+            } catch (error) {
+                availableStock = null;
+                stockState = 'error';
+                console.error('Voorraad ophalen mislukt:', error);
+            } finally {
+                clearTimeout(timeout);
+                updateStockDisplay();
+            }
         }
 
         async function loadProduct() {
             const container = document.getElementById('product-detail');
 
-            if (!productSlug || !/^[a-zA-Z0-9_-]+$/.test(productSlug)) {
+            if (!validProductSlug) {
+                productLoadFailed = true;
                 container.textContent = window.siteLanguage.text('notFound');
                 return;
             }
@@ -280,28 +463,38 @@
                     throw new Error('Ongeldig productbestand');
                 }
 
-                productData = jsyaml.load(parts[1]);
+                const parsedProduct = jsyaml.load(parts[1]);
 
-                if (!productData ||
-                    !productData.title ||
-                    !Number.isFinite(Number(productData.price))) {
+                if (
+                    !parsedProduct ||
+                    !parsedProduct.title ||
+                    !Number.isFinite(Number(parsedProduct.price))
+                ) {
                     throw new Error('Ongeldig product');
                 }
 
+                productData = parsedProduct;
                 renderProduct();
             } catch (error) {
+                productLoadFailed = true;
                 container.textContent = window.siteLanguage.text('notFound');
             }
         }
 
         loadProduct();
+        loadStock();
 
         window.addEventListener('site-language-change', () => {
             if (productData) {
                 renderProduct();
-            } else {
+            } else if (productLoadFailed) {
                 document.getElementById('product-detail').textContent =
                     window.siteLanguage.text('notFound');
+            } else {
+                document.getElementById('product-detail').textContent =
+                    isEnglish()
+                        ? 'Loading product...'
+                        : 'Product wordt geladen...';
             }
         });
     </script>
