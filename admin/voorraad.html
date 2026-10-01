@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voorraad beheren - Licht & Liefde</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 16px;
+      background: #fcfbfa;
+      color: #4a4543;
+      font: 16px Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    a {
+      color: #736359;
+    }
+
+    h1 {
+      font-family: Georgia, serif;
+      line-height: 1.3;
+    }
+
+    .card {
+      margin-top: 24px;
+      padding: 24px;
+      background: white;
+      border: 1px solid #e8e1da;
+      border-radius: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #cfc5bd;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 11px 18px;
+      background: #736359;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #594c44;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .secondary {
+      background: #eee7e1;
+      color: #4a4543;
+    }
+
+    .secondary:hover {
+      background: #e1d7ce;
+    }
+
+    .help {
+      font-size: 14px;
+      color: #7a706b;
+    }
+
+    #status {
+      white-space: pre-line;
+    }
+
+    #status.error {
+      color: #a03424;
+    }
+
+    #status.success {
+      color: #32623c;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="index.html">← Terug naar productbeheer</a>
+
+    <h1>Voorraad beheren</h1>
+    <p>Kies een product en vul de totale voorraad in.</p>
+
+    <section class="card">
+      <form id="login-form">
+        <label for="password">Beheerwachtwoord</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <p class="help">
+          Gebruik het voorraadbeheerwachtwoord dat je in Cloudflare
+          hebt ingesteld.
+        </p>
+
+        <button id="login-button" type="submit">
+          Voorraadbeheer openen
+        </button>
+      </form>
+
+      <div id="management" hidden>
+        <label for="product">Product</label>
+        <select id="product" disabled>
+          <option value="">Producten worden geladen...</option>
+        </select>
+
+        <p id="stock-summary"></p>
+
+        <form id="stock-form">
+          <label for="stock">Totale voorraad in stuks</label>
+          <input
+            id="stock"
+            type="number"
+            min="0"
+            max="1000000"
+            step="1"
+            required
+            disabled
+          >
+
+          <p class="help">
+            Vul het volledige aantal in dat je nu op voorraad hebt.
+            Bijvoorbeeld: je hebt 20 stuks en voegt 5 toe, dan vul je 25 in.
+          </p>
+
+          <div class="buttons">
+            <button id="save-button" type="submit" disabled>
+              Voorraad opslaan
+            </button>
+
+            <button
+              id="refresh-button"
+              class="secondary"
+              type="button"
+              disabled
+            >
+              Opnieuw ophalen
+            </button>
+
+            <button
+              id="logout-button"
+              class="secondary"
+              type="button"
+            >
+              Uitloggen
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const API =
+      'https://licht-en-liefde-api.timdekruyf07.workers.dev';
+
+    const PRODUCT_API =
+      'https://api.github.com/repos/timdekruyf07-dotcom/website-kaars/contents/content/producten';
+
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const passwordInput = document.getElementById('password');
+    const management = document.getElementById('management');
+    const productSelect = document.getElementById('product');
+    const stockForm = document.getElementById('stock-form');
+    const stockInput = document.getElementById('stock');
+    const stockSummary = document.getElementById('stock-summary');
+    const saveButton = document.getElementById('save-button');
+    const refreshButton = document.getElementById('refresh-button');
+    const logoutButton = document.getElementById('logout-button');
+    const status = document.getElementById('status');
+
+    // Het wachtwoord blijft alleen in het geheugen van deze pagina.
+    // Het wordt niet in localStorage of in de code opgeslagen.
+    let adminToken = '';
+    let currentInventory = null;
+    let busy = false;
+
+    function showStatus(message, type = '') {
+      status.textContent = message;
+      status.className = type;
+    }
+
+    function setBusy(value) {
+      busy = value;
+      loginButton.disabled = value;
+      passwordInput.disabled = value;
+      logoutButton.disabled = value;
+
+      productSelect.disabled =
+        value || !adminToken || productSelect.options.length === 0;
+
+      refreshButton.disabled =
+        value || !adminToken || !productSelect.value;
+
+      stockInput.disabled = value || !currentInventory;
+      saveButton.disabled = value || !currentInventory;
+    }
+
+    async function apiRequest(path, options = {}) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const response = await fetch(`${API}${path}`, {
+          ...options,
+          cache: 'no-store',
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+            ...(options.headers || {})
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const error = new Error(
+            data.error || 'De aanvraag is mislukt.'
+          );
+
+          error.status = response.status;
+          throw error;
+        }
+
+        return data;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    function displayInventory(data) {
+      currentInventory = data;
+
+      if (!data.configured) {
+        stockInput.value = '';
+        stockSummary.textContent =
+          'Voor dit product is nog geen voorraad ingesteld.';
+      } else {
+        stockInput.value = data.stock;
+        stockSummary.textContent =
+          `Totale voorraad: ${data.stock} stuks. ` +
+          `Gereserveerd: ${data.reserved}. ` +
+          `Beschikbaar: ${data.available}.`;
+      }
+
+      stockInput.min = String(data.reserved || 0);
+    }
+
+    function describeError(error) {
+      if (error.name === 'AbortError') {
+        return 'Het ophalen duurde te lang. Probeer het opnieuw.';
+      }
+
+      if (error instanceof TypeError) {
+        return 'Geen verbinding met het voorraadbeheer. Controleer je internet en probeer opnieuw.';
+      }
+
+      return error.message;
+    }
+
+    function logout() {
+      adminToken = '';
+      currentInventory = null;
+      passwordInput.value = '';
+      stockInput.value = '';
+      stockSummary.textContent = '';
+      management.hidden = true;
+      loginForm.hidden = false;
+      setBusy(false);
+    }
+
+    async function loadSelectedInventory() {
+      if (busy || !productSelect.value) return;
+
+      currentInventory = null;
+      stockInput.value = '';
+      stockSummary.textContent = '';
+      setBusy(true);
+      showStatus('Voorraad wordt opgehaald...');
+
+      try {
+        const data = await apiRequest(
+          `/admin/stock?product=${encodeURIComponent(productSelect.value)}`
+        );
+
+        displayInventory(data);
+        showStatus('');
+      } catch (error) {
+        if (error.status === 401) logout();
+        showStatus(describeError(error), 'error');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (busy) return;
+
+      adminToken = passwordInput.value;
+      setBusy(true);
+      showStatus('Voorraadbeheer wordt geopend...');
+
+      try {
+        // Controleer eerst het beheerwachtwoord.
+        await apiRequest('/admin/stock?product=kaars');
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+
+        let files;
+
+        try {
+          const response = await fetch(PRODUCT_API, {
+            cache: 'no-store',
+            signal: controller.signal
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              'De producten konden niet worden geladen. Probeer het later opnieuw.'
+            );
+          }
+
+          files = await response.json();
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        if (!Array.isArray(files)) {
+          throw new Error('De productenlijst is ongeldig.');
+        }
+
+        const products = files
+          .filter(file =>
+            file.type === 'file' &&
+            file.name.endsWith('.md') &&
+            /^[a-zA-Z0-9_-]+$/.test(file.name.slice(0, -3))
+          )
+          .map(file => file.name.slice(0, -3))
+          .sort((a, b) => a.localeCompare(b, 'nl'));
+
+        if (products.length === 0) {
+          throw new Error(
+            'Er zijn nog geen producten. Voeg eerst een product toe via productbeheer.'
+          );
+        }
+
+        productSelect.replaceChildren();
+
+        for (const slug of products) {
+          const option = document.createElement('option');
+          option.value = slug;
+          option.textContent = slug.replace(/-/g, ' ');
+          productSelect.append(option);
+        }
+
+        if (products.includes('kaars')) {
+          productSelect.value = 'kaars';
+        }
+
+        passwordInput.value = '';
+        loginForm.hidden = true;
+        management.hidden = false;
+        showStatus('');
+      } catch (error) {
+        logout();
+        showStatus(describeError(error), 'error');
+      } finally {
+        setBusy(false);
+      }
+
+      if (adminToken) {
+        await loadSelectedInventory();
+      }
+    });
+
+    productSelect.addEventListener('change', loadSelectedInventory);
+    refreshButton.addEventListener('click', loadSelectedInventory);
+
+    logoutButton.addEventListener('click', () => {
+      logout();
+      showStatus('Je bent uitgelogd.');
+    });
+
+    stockForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (busy || !currentInventory) return;
+
+      const stock = Number(stockInput.value);
+
+      if (
+        stockInput.value.trim() === '' ||
+        !Number.isSafeInteger(stock) ||
+        stock < currentInventory.reserved ||
+        stock > 1000000
+      ) {
+        showStatus(
+          'Vul een geldig heel aantal in. Het aantal mag niet lager zijn dan de gereserveerde voorraad.',
+          'error'
+        );
+        return;
+      }
+
+      setBusy(true);
+      showStatus('Voorraad wordt opgeslagen...');
+
+      try {
+        const saved = await apiRequest('/admin/stock', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            product_id: productSelect.value,
+            stock,
+            version: currentInventory.version
+          })
+        });
+
+        displayInventory(saved);
+        showStatus('De voorraad is opgeslagen!', 'success');
+      } catch (error) {
+        if (error.status === 401) {
+          logout();
+        } else {
+          // Bij een fout eerst opnieuw ophalen, zodat een oude
+          // voorraadversie niet opnieuw wordt verstuurd.
+          currentInventory = null;
+        }
+
+        showStatus(
+          `${describeError(error)}${
+            adminToken
+              ? '\nKlik op Opnieuw ophalen voordat je opnieuw opslaat.'
+              : ''
+          }`,
+          'error'
+        );
+      } finally {
+        setBusy(false);
+      }
+    });
+  </script>
+</body>
+</html>
