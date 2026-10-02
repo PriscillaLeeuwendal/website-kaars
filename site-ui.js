@@ -13,8 +13,8 @@
 
     <nav class="main-nav" aria-label="Main navigation">
       <a href="index.html">Home</a>
-      <a href="producten.html">Products</a>
-      <a href="over-ons.html">About us</a>
+      <a href="producten.html">Shop</a>
+      <a href="over-ons.html">Our Story</a>
       <a href="contact.html">Contact</a>
     </nav>
 
@@ -65,11 +65,7 @@
   document.body.prepend(topbar);
 
   topbar.querySelector('#account-button').addEventListener('click', () => {
-    alert(
-      window.siteLanguage?.get() === 'nl'
-        ? 'Een account aanmaken is binnenkort beschikbaar.'
-        : 'Creating an account will be available soon.'
-    );
+    location.href = 'account.html';
   });
 
   function translateAdmin() {
@@ -84,9 +80,23 @@
 
   window.addEventListener('site-language-change', translateAdmin);
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', translateAdmin);
-  } else {
+  function init() {
     translateAdmin();
+
+    const existingScript = document.querySelector(
+      'script[src="account.js"]'
+    );
+
+    if (!existingScript && !window.CustomerAccount) {
+      const script = document.createElement('script');
+      script.src = 'account.js';
+      document.body.appendChild(script);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
