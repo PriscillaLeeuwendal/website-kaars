@@ -1,6 +1,10 @@
 (() => {
+  const scriptUrl = document.currentScript?.src || location.href;
+  const searchScriptUrl = new URL('zoeken.js', scriptUrl).href;
   const key = 'licht-en-liefde-taal';
+
   let saved;
+  let dialogReturnFocus = null;
 
   try {
     saved = localStorage.getItem(key);
@@ -9,7 +13,6 @@
   }
 
   let language = saved === 'nl' ? 'nl' : 'en';
-  let dialogReturnFocus = null;
 
   const words = {
     nl: {
@@ -97,10 +100,10 @@
     }
   };
 
-  const set = (selector, text) => {
+  function set(selector, text) {
     const element = document.querySelector(selector);
     if (element) element.textContent = text;
-  };
+  }
 
   function apply() {
     const en = language === 'en';
@@ -120,17 +123,12 @@
         node => node.nodeType === Node.TEXT_NODE
       );
 
-      if (textNode) {
-        textNode.textContent = t.cart;
-      }
+      if (textNode) textNode.textContent = t.cart;
     });
 
     document.querySelectorAll('.main-nav a').forEach((link, i) => {
       link.textContent = [
-        t.home,
-        t.products,
-        t.about,
-        t.contact
+        t.home, t.products, t.about, t.contact
       ][i] || link.textContent;
     });
 
@@ -144,18 +142,13 @@
     }
 
     set('footer p', t.footer);
-
-    set(
-      '#language-button',
-      en ? 'Language: English' : 'Taal: Nederlands'
-    );
+    set('#language-button', en ? 'Language: English' : 'Taal: Nederlands');
 
     const account = document.getElementById('account-button');
 
     if (account) {
       account.setAttribute(
-        'aria-label',
-        en ? 'My account' : 'Mijn account'
+        'aria-label', en ? 'My account' : 'Mijn account'
       );
     }
 
@@ -163,31 +156,23 @@
 
     if (page === 'index.html') {
       document.title = 'Diatheke Atelier';
-
       const h = homeWords[language];
 
       document.querySelectorAll('[data-home-text]').forEach(element => {
         const text = h[element.dataset.homeText];
-
-        if (typeof text === 'string') {
-          element.textContent = text;
-        }
+        if (typeof text === 'string') element.textContent = text;
       });
 
       document.querySelectorAll('[data-home-alt]').forEach(element => {
         const text = h[element.dataset.homeAlt];
-
-        if (typeof text === 'string') {
-          element.alt = text;
-        }
+        if (typeof text === 'string') element.alt = text;
       });
 
       const values = document.querySelector('.values');
 
       if (values) {
         values.setAttribute(
-          'aria-label',
-          en ? 'Our values' : 'Onze waarden'
+          'aria-label', en ? 'Our values' : 'Onze waarden'
         );
       }
 
@@ -207,12 +192,7 @@
         : 'Producten - Diatheke Atelier';
 
       set('header h1', en ? 'Our Products' : 'Onze Producten');
-
-      set(
-        '.section h2',
-        en ? 'Handmade Candles' : 'Handgemaakte Kaarsen'
-      );
-
+      set('.section h2', en ? 'Handmade Candles' : 'Handgemaakte Kaarsen');
       set('#refresh-products-btn', t.refresh);
 
       const status = document.querySelector(
@@ -236,11 +216,9 @@
 
       set('header h1', en ? 'About Us' : 'Over Ons');
 
-      set(
-        '.container h2',
-        en
-          ? 'The story behind Diatheke Atelier'
-          : 'Het verhaal achter Diatheke Atelier'
+      set('.container h2', en
+        ? 'The story behind Diatheke Atelier'
+        : 'Het verhaal achter Diatheke Atelier'
       );
 
       const paragraphs = document.querySelectorAll('.container p');
@@ -261,21 +239,19 @@
     if (page === 'contact.html') {
       document.title = 'Contact - Diatheke Atelier';
 
-      set(
-        '.container h2',
-        en ? 'Questions or orders?' : 'Interesse of bestellen?'
+      set('.container h2', en
+        ? 'Questions or orders?'
+        : 'Interesse of bestellen?'
       );
 
-      set(
-        '.container p',
-        en
-          ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
-          : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
+      set('.container p', en
+        ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
+        : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
       );
 
-      set(
-        '.container .btn',
-        en ? 'Send a message' : 'Stuur een berichtje'
+      set('.container .btn', en
+        ? 'Send a message'
+        : 'Stuur een berichtje'
       );
     }
   }
@@ -289,9 +265,7 @@
       localStorage.setItem(key, value);
     } catch (_) {}
 
-    const currentDialog = document.getElementById('language-dialog');
-
-    if (currentDialog) currentDialog.remove();
+    document.getElementById('language-dialog')?.remove();
 
     apply();
     window.dispatchEvent(new Event('site-language-change'));
@@ -337,14 +311,10 @@
       </div>
     `;
 
-    const buttons = Array.from(
-      overlay.querySelectorAll('[data-lang]')
-    );
+    const buttons = Array.from(overlay.querySelectorAll('[data-lang]'));
 
     buttons.forEach(button => {
-      button.addEventListener('click', () => {
-        choose(button.dataset.lang);
-      });
+      button.addEventListener('click', () => choose(button.dataset.lang));
     });
 
     overlay.addEventListener('keydown', event => {
@@ -375,9 +345,7 @@
   const css = document.createElement('style');
 
   css.textContent = `
-    #language-button {
-      cursor: pointer;
-    }
+    #language-button { cursor: pointer; }
 
     #language-dialog {
       position: fixed;
@@ -435,9 +403,7 @@
       font: 14px Arial, sans-serif;
     }
 
-    .language-actions button:hover {
-      background: #906739;
-    }
+    .language-actions button:hover { background: #906739; }
 
     .language-actions button:focus-visible {
       outline: 2px solid #3d3024;
@@ -456,14 +422,19 @@
   function init() {
     apply();
 
-    const languageButton = document.getElementById('language-button');
+    document.getElementById('language-button')
+      ?.addEventListener('click', dialog);
 
-    if (languageButton) {
-      languageButton.addEventListener('click', dialog);
-    }
+    if (saved !== 'nl' && saved !== 'en') dialog();
 
-    if (saved !== 'nl' && saved !== 'en') {
-      dialog();
+    if (
+      document.querySelector('.header-actions') &&
+      !document.getElementById('product-search-script')
+    ) {
+      const searchScript = document.createElement('script');
+      searchScript.id = 'product-search-script';
+      searchScript.src = searchScriptUrl;
+      document.body.appendChild(searchScript);
     }
   }
 
