@@ -1,350 +1,46 @@
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Product - Licht & Liefde</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-
-  <style>
-    @font-face {
-      font-family: Marseille;
-      src: url('fonts/Marseille.ttf') format('truetype');
-    }
-
-    [hidden] {
-      display: none !important;
-    }
-
-    body {
-      margin: 0;
-      background: #fcfbfa;
-      color: #4a4543;
-      font-family: Georgia, serif;
-      line-height: 1.6;
-    }
-
-    header {
-      position: relative;
-      padding: 80px 20px 40px;
-      color: white;
-      text-align: center;
-      background:
-        linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
-        url('images/hero-banner.jpg') center/cover;
-      border-bottom: 1px solid #e8e1da;
-    }
-
-    .cart-link {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 8px 14px;
-      border-radius: 4px;
-      background: #8c7b70;
-      color: white;
-      text-decoration: none;
-      font: .85em sans-serif;
-      box-shadow: 0 2px 4px rgba(0,0,0,.2);
-    }
-
-    .cart-link:hover,
-    .shop-button:hover {
-      background: #736359;
-    }
-
-    header h1 {
-      margin-bottom: 10px;
-      font: 3em Marseille, Georgia, serif;
-    }
-
-    .main-nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .main-nav a {
-      padding: 8px 18px;
-      border: 1px solid rgba(255,255,255,.4);
-      border-radius: 20px;
-      background: rgba(255,255,255,.2);
-      color: white;
-      text-decoration: none;
-      font: .9em sans-serif;
-      backdrop-filter: blur(5px);
-    }
-
-    .main-nav a:hover,
-    .main-nav a.active {
-      background: rgba(255,255,255,.4);
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
-      min-height: 250px;
-    }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 25px;
-      color: #736359;
-    }
-
-    .product-layout {
-      display: grid;
-      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-      gap: 45px;
-      align-items: start;
-    }
-
-    .product-gallery {
-      min-width: 0;
-    }
-
-    .gallery-frame {
-      position: relative;
-    }
-
-    .gallery-viewport {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      overscroll-behavior-x: contain;
-      scrollbar-width: none;
-      border: 1px solid #e8e1da;
-      border-radius: 8px;
-      background: white;
-    }
-
-    .gallery-viewport::-webkit-scrollbar {
-      display: none;
-    }
-
-    .gallery-slide {
-      flex: 0 0 100%;
-      min-width: 0;
-      aspect-ratio: 1 / 1;
-      display: grid;
-      place-items: center;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-
-    .product-photo {
-      width: 100%;
-      height: 100%;
-      min-height: 0;
-      object-fit: contain;
-      display: block;
-      user-select: none;
-    }
-
-    .gallery-error {
-      padding: 25px;
-      text-align: center;
-    }
-
-    .gallery-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 44px;
-      height: 44px;
-      border: 1px solid #e8e1da;
-      border-radius: 50%;
-      background: rgba(255,255,255,.94);
-      color: #4a4543;
-      font: 32px/1 Arial, sans-serif;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,.12);
-    }
-
-    .gallery-previous {
-      left: 10px;
-    }
-
-    .gallery-next {
-      right: 10px;
-    }
-
-    .gallery-arrow:disabled {
-      opacity: .4;
-      cursor: default;
-    }
-
-    .gallery-dots {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 2px;
-      margin-top: 8px;
-    }
-
-    .gallery-dot {
-      display: grid;
-      place-items: center;
-      width: 38px;
-      height: 38px;
-      padding: 0;
-      border: 0;
-      border-radius: 50%;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .gallery-dot::before {
-      content: '';
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #d5cbc3;
-    }
-
-    .gallery-dot.active::before {
-      background: #736359;
-    }
-
-    .gallery-dot:focus-visible,
-    .gallery-arrow:focus-visible,
-    .gallery-viewport:focus-visible {
-      outline: 2px solid #736359;
-      outline-offset: 3px;
-    }
-
-    .gallery-counter {
-      margin: 0;
-      text-align: center;
-      color: #7a706b;
-      font-size: .85em;
-    }
-
-    .product-info h2 {
-      margin: 0 0 10px;
-      color: #3b3533;
-      font: 2.5em Marseille, Georgia, serif;
-    }
-
-    .product-price {
-      margin: 0 0 22px;
-      font-size: 1.4em;
-      font-weight: bold;
-    }
-
-    .product-description {
-      margin-bottom: 28px;
-      white-space: pre-line;
-    }
-
-    .stock-message {
-      padding: 12px 16px;
-      margin: 0 0 20px;
-      border: 1px solid #e8e1da;
-      border-radius: 6px;
-      background: #f4efe9;
-      font-size: .95em;
-    }
-
-    .stock-message.sold-out {
-      border-color: #e7c7bf;
-      background: #faeeeb;
-      color: #8b4437;
-    }
-
-    .stock-message.stock-neutral {
-      color: #7a706b;
-    }
-
-    .shop-button {
-      padding: 12px 22px;
-      border: 0;
-      border-radius: 4px;
-      background: #8c7b70;
-      color: white;
-      cursor: pointer;
-      font: .95em sans-serif;
-    }
-
-    .shop-button:disabled {
-      background: #b6aaa2;
-      cursor: not-allowed;
-    }
-
-    footer {
-      margin-top: 50px;
-      padding: 30px;
-      border-top: 1px solid #e8e1da;
-      background: #f4efe9;
-      color: #7a706b;
-      text-align: center;
-      font-size: .9em;
-    }
-
-    @media (max-width: 700px) {
-      .product-layout {
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-
-      .product-info h2 {
-        font-size: 2em;
-      }
-    }
-  </style>
+  <title>Product - Diatheke Atelier</title>
+  <link rel="stylesheet" href="stijl.css">
 </head>
 
 <body>
-  <header>
-    <a href="#winkelmand" class="cart-link" data-open-cart>
-      Winkelmand (<span data-cart-count>0</span>)
-    </a>
-
+  <header class="page-banner">
     <h1>Product</h1>
-
-    <nav class="main-nav">
-      <a href="index.html">Home</a>
-      <a href="producten.html" class="active">Producten</a>
-      <a href="over-ons.html">Over ons</a>
-      <a href="contact.html">Contact</a>
-    </nav>
   </header>
 
   <main class="container">
-    <a href="producten.html" class="back-link">
-      ← Terug naar producten
-    </a>
+    <a href="producten.html" class="back-link">← Back to products</a>
 
     <div id="product-detail" aria-live="polite">
-      <p>Product wordt geladen...</p>
+      <p>Loading product...</p>
     </div>
   </main>
 
   <footer>
-    <p>© 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+    <p>© 2026 Diatheke Atelier — Made with care.</p>
   </footer>
 
+  <script src="site-ui.js"></script>
   <script src="taal.js"></script>
   <script src="winkelmand.js"></script>
 
   <script>
-    const slug =
-      new URLSearchParams(location.search).get('product');
+    const slug = new URLSearchParams(location.search).get('product');
 
     let product = null;
     let productFailed = false;
     let stockState = 'loading';
     let availableStock = null;
     let currentPhoto = 0;
+    let galleryObserver = null;
 
     function renderStock() {
       const message = document.getElementById('stock-message');
       const button = document.getElementById('add-to-cart');
-
       if (!message || !button) return;
 
       message.className = 'stock-message';
@@ -354,8 +50,7 @@
       if (stockState === 'loading') {
         message.classList.add('stock-neutral');
         message.textContent = Shop.text(
-          'Voorraad wordt opgehaald...',
-          'Checking stock...'
+          'Voorraad wordt opgehaald...', 'Checking stock...'
         );
         return;
       }
@@ -384,7 +79,6 @@
           'Dit product is momenteel uitverkocht.',
           'This product is currently sold out.'
         );
-
         button.textContent = Shop.text('Uitverkocht', 'Sold out');
         return;
       }
@@ -404,24 +98,18 @@
 
     function productPhotos() {
       const extra = Array.isArray(product.extra_images)
-        ? product.extra_images
-        : [];
+        ? product.extra_images : [];
 
-      const urls = [product.image, ...extra]
-        .map(value => Shop.imageUrl(value))
-        .filter(Boolean);
-
-      return [...new Set(urls)];
+      return [...new Set(
+        [product.image, ...extra].map(Shop.imageUrl).filter(Boolean)
+      )];
     }
 
     function createGallery(photos) {
       const gallery = Shop.element('section', 'product-gallery');
-
       gallery.setAttribute(
-        'aria-label',
-        Shop.text('Productfoto’s', 'Product photos')
+        'aria-label', Shop.text('Productfoto’s', 'Product photos')
       );
-
       gallery.setAttribute(
         'aria-roledescription',
         Shop.text('Fotocarrousel', 'Photo carousel')
@@ -429,16 +117,11 @@
 
       const frame = Shop.element('div', 'gallery-frame');
       const viewport = Shop.element('div', 'gallery-viewport');
-
       viewport.id = 'product-photo-viewport';
-
-      viewport.setAttribute(
-        'aria-label',
-        Shop.text(
-          'Veeg om de volgende foto te bekijken',
-          'Swipe to view the next photo'
-        )
-      );
+      viewport.setAttribute('aria-label', Shop.text(
+        'Veeg om de volgende foto te bekijken',
+        'Swipe to view the next photo'
+      ));
 
       if (photos.length > 1) viewport.tabIndex = 0;
 
@@ -446,36 +129,24 @@
 
       photos.forEach((url, index) => {
         const slide = Shop.element('div', 'gallery-slide');
-
         slide.setAttribute('role', 'group');
-
-        slide.setAttribute(
-          'aria-label',
-          Shop.text(
-            `Foto ${index + 1} van ${photos.length}`,
-            `Photo ${index + 1} of ${photos.length}`
-          )
-        );
+        slide.setAttribute('aria-label', Shop.text(
+          `Foto ${index + 1} van ${photos.length}`,
+          `Photo ${index + 1} of ${photos.length}`
+        ));
 
         const image = Shop.element('img', 'product-photo');
-
         image.src = url;
-        image.alt =
-          `${Shop.title(product)} — ` +
-          `${Shop.text('foto', 'photo')} ${index + 1}`;
-
+        image.alt = `${Shop.title(product)} — ${
+          Shop.text('foto', 'photo')
+        } ${index + 1}`;
         image.draggable = false;
         image.loading = index === 0 ? 'eager' : 'lazy';
 
-        const fallback = Shop.element(
-          'p',
-          'gallery-error',
-          Shop.text(
-            'Deze foto kon niet worden geladen.',
-            'This photo could not be loaded.'
-          )
-        );
-
+        const fallback = Shop.element('p', 'gallery-error', Shop.text(
+          'Deze foto kon niet worden geladen.',
+          'This photo could not be loaded.'
+        ));
         fallback.hidden = true;
 
         image.addEventListener('error', () => {
@@ -490,50 +161,32 @@
 
       frame.append(viewport);
       gallery.append(frame);
-
-      currentPhoto = Math.max(
-        0,
-        Math.min(currentPhoto, photos.length - 1)
-      );
+      currentPhoto = Math.max(0, Math.min(currentPhoto, photos.length - 1));
 
       if (photos.length === 1) return gallery;
 
       const previous = Shop.element(
-        'button',
-        'gallery-arrow gallery-previous',
-        '‹'
+        'button', 'gallery-arrow gallery-previous', '‹'
       );
-
       const next = Shop.element(
-        'button',
-        'gallery-arrow gallery-next',
-        '›'
+        'button', 'gallery-arrow gallery-next', '›'
       );
 
       previous.type = next.type = 'button';
-
       previous.setAttribute(
-        'aria-label',
-        Shop.text('Vorige foto', 'Previous photo')
+        'aria-label', Shop.text('Vorige foto', 'Previous photo')
       );
-
       next.setAttribute(
-        'aria-label',
-        Shop.text('Volgende foto', 'Next photo')
+        'aria-label', Shop.text('Volgende foto', 'Next photo')
       );
-
       previous.setAttribute('aria-controls', viewport.id);
       next.setAttribute('aria-controls', viewport.id);
-
       frame.append(previous, next);
 
       const dots = Shop.element('div', 'gallery-dots');
-
       dots.setAttribute('role', 'group');
-
       dots.setAttribute(
-        'aria-label',
-        Shop.text('Kies een foto', 'Choose a photo')
+        'aria-label', Shop.text('Kies een foto', 'Choose a photo')
       );
 
       const buttons = [];
@@ -541,38 +194,26 @@
       photos.forEach((url, index) => {
         const dot = Shop.element('button', 'gallery-dot');
         dot.type = 'button';
-
-        dot.setAttribute(
-          'aria-label',
-          Shop.text(
-            `Bekijk foto ${index + 1} van ${photos.length}`,
-            `View photo ${index + 1} of ${photos.length}`
-          )
-        );
-
+        dot.setAttribute('aria-label', Shop.text(
+          `Bekijk foto ${index + 1} van ${photos.length}`,
+          `View photo ${index + 1} of ${photos.length}`
+        ));
         dot.setAttribute('aria-controls', viewport.id);
         dot.addEventListener('click', () => goTo(index));
-
         buttons.push(dot);
         dots.append(dot);
       });
 
       const counter = Shop.element('p', 'gallery-counter');
-
       counter.setAttribute('aria-live', 'polite');
       counter.setAttribute('aria-atomic', 'true');
-
       gallery.append(dots, counter);
 
       function update(index) {
-        currentPhoto = Math.max(
-          0,
-          Math.min(index, photos.length - 1)
-        );
+        currentPhoto = Math.max(0, Math.min(index, photos.length - 1));
 
         buttons.forEach((button, i) => {
           button.classList.toggle('active', i === currentPhoto);
-
           if (i === currentPhoto) {
             button.setAttribute('aria-current', 'true');
           } else {
@@ -581,15 +222,11 @@
         });
 
         slides.forEach((slide, i) => {
-          slide.setAttribute(
-            'aria-hidden',
-            String(i !== currentPhoto)
-          );
+          slide.setAttribute('aria-hidden', String(i !== currentPhoto));
         });
 
         previous.disabled = currentPhoto === 0;
         next.disabled = currentPhoto === photos.length - 1;
-
         counter.textContent = Shop.text(
           `Foto ${currentPhoto + 1} van ${photos.length}`,
           `Photo ${currentPhoto + 1} of ${photos.length}`
@@ -597,38 +234,21 @@
       }
 
       function goTo(index) {
-        const target = Math.max(
-          0,
-          Math.min(index, photos.length - 1)
-        );
-
-        const reduced = window.matchMedia(
-          '(prefers-reduced-motion: reduce)'
-        ).matches;
-
+        const target = Math.max(0, Math.min(index, photos.length - 1));
         viewport.scrollTo({
           left: target * viewport.clientWidth,
-          behavior: reduced ? 'auto' : 'smooth'
+          behavior: 'auto'
         });
-
         update(target);
       }
 
-      previous.addEventListener('click', () => {
-        goTo(currentPhoto - 1);
-      });
-
-      next.addEventListener('click', () => {
-        goTo(currentPhoto + 1);
-      });
+      previous.addEventListener('click', () => goTo(currentPhoto - 1));
+      next.addEventListener('click', () => goTo(currentPhoto + 1));
 
       viewport.addEventListener('keydown', event => {
-        if (event.key === 'ArrowLeft') {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
-          goTo(currentPhoto - 1);
-        } else if (event.key === 'ArrowRight') {
-          event.preventDefault();
-          goTo(currentPhoto + 1);
+          goTo(currentPhoto + (event.key === 'ArrowLeft' ? -1 : 1));
         }
       });
 
@@ -639,17 +259,9 @@
 
         scrollFrame = requestAnimationFrame(() => {
           scrollFrame = null;
-
-          if (
-            !viewport.isConnected ||
-            !viewport.clientWidth
-          ) {
-            return;
+          if (viewport.isConnected && viewport.clientWidth) {
+            update(Math.round(viewport.scrollLeft / viewport.clientWidth));
           }
-
-          update(Math.round(
-            viewport.scrollLeft / viewport.clientWidth
-          ));
         });
       }, { passive: true });
 
@@ -657,62 +269,47 @@
 
       requestAnimationFrame(() => {
         if (viewport.isConnected) {
-          viewport.scrollLeft =
-            currentPhoto * viewport.clientWidth;
+          viewport.scrollLeft = currentPhoto * viewport.clientWidth;
         }
       });
 
       if ('ResizeObserver' in window) {
-        const observer = new ResizeObserver(() => {
-          if (!viewport.isConnected) {
-            observer.disconnect();
-            return;
+        galleryObserver = new ResizeObserver(() => {
+          if (viewport.isConnected) {
+            viewport.scrollLeft = currentPhoto * viewport.clientWidth;
           }
-
-          viewport.scrollLeft =
-            currentPhoto * viewport.clientWidth;
         });
-
-        observer.observe(viewport);
+        galleryObserver.observe(viewport);
       }
 
       return gallery;
     }
 
     function renderProduct() {
+      galleryObserver?.disconnect();
+      galleryObserver = null;
+
       const container = document.getElementById('product-detail');
       container.replaceChildren();
 
       if (!product) {
         container.textContent = productFailed
           ? window.siteLanguage.text('notFound')
-          : Shop.text(
-              'Product wordt geladen...',
-              'Loading product...'
-            );
+          : Shop.text('Product wordt geladen...', 'Loading product...');
         return;
       }
 
       const layout = Shop.element('div', 'product-layout');
       const photos = productPhotos();
-
-      if (photos.length) {
-        layout.append(createGallery(photos));
-      }
+      if (photos.length) layout.append(createGallery(photos));
 
       const info = Shop.element('div', 'product-info');
       const heading = Shop.element('h2', '', Shop.title(product));
-
       const price = Shop.element(
-        'p',
-        'product-price',
-        Shop.money(product.cents)
+        'p', 'product-price', Shop.money(product.cents)
       );
-
       const description = Shop.element(
-        'p',
-        'product-description',
-        Shop.description(product, true)
+        'p', 'product-description', Shop.description(product, true)
       );
 
       const stock = Shop.element('p', 'stock-message');
@@ -720,11 +317,8 @@
       stock.setAttribute('role', 'status');
 
       const button = Shop.element(
-        'button',
-        'shop-button',
-        window.siteLanguage.text('add')
+        'button', 'shop-button', window.siteLanguage.text('add')
       );
-
       button.id = 'add-to-cart';
       button.type = 'button';
       button.disabled = true;
@@ -738,8 +332,7 @@
       layout.append(info);
       container.append(layout);
 
-      document.title = `${Shop.title(product)} - Licht & Liefde`;
-
+      document.title = `${Shop.title(product)} - Diatheke Atelier`;
       renderStock();
     }
 
@@ -769,17 +362,13 @@
         product = await Shop.getProduct(slug);
         renderProduct();
         await loadStock();
-      } catch (error) {
+      } catch (_) {
         productFailed = true;
         renderProduct();
       }
     }
 
-    window.addEventListener(
-      'site-language-change',
-      renderProduct
-    );
-
+    window.addEventListener('site-language-change', renderProduct);
     loadProduct();
   </script>
 </body>
