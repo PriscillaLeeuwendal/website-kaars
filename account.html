@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>My Account - Diatheke Atelier</title>
+
+  <link rel="stylesheet" href="stijl.css">
+
+  <style>
+    .account-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .account-tab {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #d7c5ae;
+      background: transparent;
+      color: #65513b;
+      cursor: pointer;
+    }
+
+    .account-tab.active {
+      background: #a67c48;
+      color: white;
+      border-color: #a67c48;
+    }
+
+    .account-form label {
+      margin-bottom: 18px;
+    }
+
+    .account-form .fields label {
+      margin-bottom: 0;
+    }
+
+    .account-email {
+      overflow-wrap: anywhere;
+      color: #80603b;
+    }
+
+    .account-message {
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    #turnstile-container {
+      margin: 20px 0;
+      min-height: 65px;
+    }
+
+    .account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .account-tab:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="page-banner">
+    <h1 id="account-heading">My Account</h1>
+  </header>
+
+  <main class="container narrow">
+    <p id="page-message" class="account-message"
+      role="status" aria-live="polite"></p>
+
+    <section id="auth-section" class="box" hidden>
+      <div class="account-tabs" role="group" aria-label="Account">
+        <button type="button" id="login-tab"
+          class="account-tab active"></button>
+
+        <button type="button" id="register-tab"
+          class="account-tab"></button>
+      </div>
+
+      <h2 id="auth-heading"></h2>
+      <p id="auth-description"></p>
+
+      <form id="auth-form" class="account-form">
+        <fieldset id="auth-fields">
+          <label>
+            <span data-text="email"></span>
+            <input
+              id="account-email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              maxlength="254"
+              required
+            >
+          </label>
+
+          <label>
+            <span data-text="password"></span>
+            <input
+              id="account-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="128"
+              required
+            >
+          </label>
+
+          <p id="password-hint" class="note" hidden></p>
+        </fieldset>
+
+        <div id="turnstile-container"></div>
+
+        <button id="auth-submit" type="submit"
+          class="shop-button" disabled></button>
+      </form>
+
+      <p id="auth-message" class="account-message"
+        role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="profile-section" class="box" hidden>
+      <h2 id="profile-heading"></h2>
+      <p id="signed-in-email" class="account-email"></p>
+      <p id="profile-description"></p>
+
+      <form id="address-form" class="account-form">
+        <fieldset id="address-fields">
+          <div class="fields">
+            <label>
+              <span data-text="first_name"></span>
+              <input name="first_name" autocomplete="given-name"
+                maxlength="80" required>
+            </label>
+
+            <label>
+              <span data-text="last_name"></span>
+              <input name="last_name" autocomplete="family-name"
+                maxlength="100" required>
+            </label>
+
+            <label>
+              <span data-text="street"></span>
+              <input name="street" autocomplete="address-line1"
+                maxlength="150" required>
+            </label>
+
+            <label>
+              <span data-text="house_number"></span>
+              <input name="house_number" autocomplete="address-line2"
+                maxlength="30" required>
+            </label>
+
+            <label>
+              <span data-text="postal_code"></span>
+              <input name="postal_code" autocomplete="postal-code"
+                maxlength="12" required>
+            </label>
+
+            <label>
+              <span data-text="city"></span>
+              <input name="city" autocomplete="address-level2"
+                maxlength="100" required>
+            </label>
+          </div>
+
+          <p id="country-note" class="note"></p>
+        </fieldset>
+
+        <div class="account-actions">
+          <button type="submit" id="save-address"
+            class="shop-button"></button>
+
+          <button type="button" id="delete-address"
+            class="small-button"></button>
+
+          <button type="button" id="logout"
+            class="small-button"></button>
+        </div>
+      </form>
+
+      <p id="address-message" class="account-message"
+        role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Diatheke Atelier — Made with care.</p>
+  </footer>
+
+  <script src="site-ui.js"></script>
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
+  <script src="account.js"></script>
+
+  <script>
+    const A = window.CustomerAccount;
+    const t = A.text;
+
+    const authSection = document.getElementById('auth-section');
+    const profileSection = document.getElementById('profile-section');
+    const authForm = document.getElementById('auth-form');
+    const addressForm = document.getElementById('address-form');
+    const authSubmit = document.getElementById('auth-submit');
+    const authMessage = document.getElementById('auth-message');
+    const addressMessage = document.getElementById('address-message');
+    const pageMessage = document.getElementById('page-message');
+    const loginTab = document.getElementById('login-tab');
+    const registerTab = document.getElementById('register-tab');
+
+    let mode = 'login';
+    let account = null;
+    let busy = false;
+    let widgetId = null;
+    let turnstileToken = '';
+    let widgetReady = false;
+
+    const labels = {
+      email: ['E-mailadres', 'Email address'],
+      password: ['Wachtwoord', 'Password'],
+      first_name: ['Voornaam', 'First name'],
+      last_name: ['Achternaam', 'Last name'],
+      street: ['Straat', 'Street'],
+      house_number: ['Huisnummer en toevoeging', 'House number'],
+      postal_code: ['Postcode', 'Postal code'],
+      city: ['Plaats', 'City']
+    };
+
+    function set(id, nl, en) {
+      document.getElementById(id).textContent = t(nl, en);
+    }
+
+    function translate() {
+      document.title = t(
+        'Mijn account - Diatheke Atelier',
+        'My Account - Diatheke Atelier'
+      );
+
+      set('account-heading', 'Mijn account', 'My Account');
+      set('login-tab', 'Inloggen', 'Sign in');
+      set('register-tab', 'Account aanmaken', 'Create account');
+
+      set(
+        'auth-heading',
+        mode === 'login' ? 'Welkom terug' : 'Maak je account aan',
+        mode === 'login' ? 'Welcome back' : 'Create your account'
+      );
+
+      set(
+        'auth-description',
+        mode === 'login'
+          ? 'Log in om je opgeslagen adres te bekijken en aan te passen.'
+          : 'Maak een account aan om je afleveradres te bewaren.',
+        mode === 'login'
+          ? 'Sign in to view and edit your saved address.'
+          : 'Create an account to save your shipping address.'
+      );
+
+      set(
+        'password-hint',
+        'Gebruik minimaal 15 tekens. Een lange wachtwoordzin is makkelijk te onthouden.',
+        'Use at least 15 characters. A long passphrase can be easier to remember.'
+      );
+
+      set('profile-heading', 'Je afleveradres', 'Your shipping address');
+
+      set(
+        'profile-description',
+        'Hier kun je je adres bewaren of aanpassen.',
+        'Save or update your address here.'
+      );
+
+      set('country-note', 'Land: Nederland', 'Country: Netherlands');
+      set('save-address', 'Adres opslaan', 'Save address');
+      set('delete-address', 'Opgeslagen adres verwijderen', 'Remove saved address');
+      set('logout', 'Uitloggen', 'Sign out');
+
+      document.querySelectorAll('[data-text]').forEach(node => {
+        node.textContent = t(...labels[node.dataset.text]);
+      });
+
+      authSubmit.textContent = busy
+        ? t('Even wachten...', 'Please wait...')
+        : mode === 'login'
+          ? t('Inloggen', 'Sign in')
+          : t('Account aanmaken', 'Create account');
+
+      loginTab.classList.toggle('active', mode === 'login');
+      registerTab.classList.toggle('active', mode === 'register');
+      loginTab.setAttribute('aria-pressed', String(mode === 'login'));
+      registerTab.setAttribute('aria-pressed', String(mode === 'register'));
+
+      document.getElementById('password-hint').hidden = mode !== 'register';
+
+      const password = document.getElementById('account-password');
+      password.autocomplete =
+        mode === 'register' ? 'new-password' : 'current-password';
+
+      if (mode === 'register') {
+        password.minLength = 15;
+      } else {
+        password.removeAttribute('minlength');
+      }
+
+      updateDisabled();
+    }
+
+    function updateDisabled() {
+      document.getElementById('auth-fields').disabled = busy;
+      document.getElementById('address-fields').disabled = busy;
+
+      loginTab.disabled = busy;
+      registerTab.disabled = busy;
+      authSubmit.disabled = busy || !turnstileToken;
+
+      document.getElementById('save-address').disabled = busy;
+      document.getElementById('logout').disabled = busy;
+      document.getElementById('delete-address').disabled =
+        busy || !account?.address;
+    }
+
+    function showAccount() {
+      authSection.hidden = Boolean(account);
+      profileSection.hidden = !account;
+
+      if (account) {
+        document.getElementById('signed-in-email').textContent = account.email;
+
+        const address = account.address || {};
+
+        for (const field of [
+          'first_name', 'last_name', 'street',
+          'house_number', 'postal_code', 'city'
+        ]) {
+          addressForm.elements.namedItem(field).value =
+            address[field] || '';
+        }
+      }
+
+      translate();
+    }
+
+    function resetWidget() {
+      turnstileToken = '';
+      updateDisabled();
+
+      if (widgetId !== null && window.turnstile) {
+        window.turnstile.reset(widgetId);
+      }
+    }
+
+    function changeMode(value) {
+      if (busy) return;
+
+      mode = value;
+      authMessage.textContent = '';
+      document.getElementById('account-password').value = '';
+      translate();
+      resetWidget();
+    }
+
+    loginTab.addEventListener('click', () => changeMode('login'));
+    registerTab.addEventListener('click', () => changeMode('register'));
+
+    async function prepareWidget() {
+      if (widgetReady) return;
+
+      try {
+        const config = await A.config();
+
+        if (!config.turnstile_site_key) {
+          throw new Error(t(
+            'De beveiligingscontrole is niet ingesteld.',
+            'The security check has not been configured.'
+          ));
+        }
+
+        if (!window.turnstile) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src =
+              'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(t(
+              'De beveiligingscontrole kon niet worden geladen. Ververs de pagina.',
+              'The security check could not be loaded. Refresh the page.'
+            )));
+
+            document.head.appendChild(script);
+          });
+        }
+
+        widgetId = window.turnstile.render('#turnstile-container', {
+          sitekey: config.turnstile_site_key,
+          action: 'account',
+          theme: 'light',
+          language: 'auto',
+
+          callback: token => {
+            turnstileToken = token;
+            updateDisabled();
+          },
+
+          'expired-callback': () => {
+            turnstileToken = '';
+            updateDisabled();
+          },
+
+          'error-callback': () => {
+            turnstileToken = '';
+            authMessage.textContent = t(
+              'De beveiligingscontrole is mislukt. Ververs de pagina om opnieuw te proberen.',
+              'The security check failed. Refresh the page to try again.'
+            );
+            updateDisabled();
+          }
+        });
+
+        widgetReady = true;
+      } catch (error) {
+        authMessage.textContent = error.message;
+      }
+    }
+
+    authForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !turnstileToken) return;
+
+      busy = true;
+      authMessage.textContent = '';
+      translate();
+
+      const email = document.getElementById('account-email').value.trim();
+      const password = document.getElementById('account-password').value;
+
+      try {
+        account = mode === 'login'
+          ? await A.login(email, password, turnstileToken)
+          : await A.register(email, password, turnstileToken);
+
+        document.getElementById('account-password').value = '';
+        pageMessage.textContent = '';
+        addressMessage.textContent = '';
+        showAccount();
+      } catch (error) {
+        authMessage.textContent = error.message;
+      } finally {
+        busy = false;
+        resetWidget();
+        translate();
+      }
+    });
+
+    addressForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !account) return;
+
+      busy = true;
+      addressMessage.textContent = '';
+      updateDisabled();
+
+      const address = { country: 'NL' };
+
+      for (const name of [
+        'first_name', 'last_name', 'street',
+        'house_number', 'postal_code', 'city'
+      ]) {
+        address[name] = addressForm.elements.namedItem(name).value.trim();
+      }
+
+      try {
+        account = await A.saveAddress(address);
+        showAccount();
+        addressMessage.textContent = t(
+          'Je adres is opgeslagen.',
+          'Your address has been saved.'
+        );
+      } catch (error) {
+        if (error.status === 401) {
+          account = null;
+          showAccount();
+          authMessage.textContent = error.message;
+          await prepareWidget();
+        } else {
+          addressMessage.textContent = error.message;
+        }
+      } finally {
+        busy = false;
+        translate();
+      }
+    });
+
+    document.getElementById('delete-address')
+      .addEventListener('click', async () => {
+        if (busy || !account?.address) return;
+
+        if (!confirm(t(
+          'Wil je je opgeslagen adres verwijderen?',
+          'Remove your saved address?'
+        ))) return;
+
+        busy = true;
+        addressMessage.textContent = '';
+        updateDisabled();
+
+        try {
+          account = await A.saveAddress(null);
+          showAccount();
+          addressMessage.textContent = t(
+            'Je opgeslagen adres is verwijderd.',
+            'Your saved address has been removed.'
+          );
+        } catch (error) {
+          if (error.status === 401) {
+            account = null;
+            showAccount();
+            authMessage.textContent = error.message;
+            await prepareWidget();
+          } else {
+            addressMessage.textContent = error.message;
+          }
+        } finally {
+          busy = false;
+          translate();
+        }
+      });
+
+    document.getElementById('logout')
+      .addEventListener('click', async () => {
+        if (busy) return;
+
+        busy = true;
+        addressMessage.textContent = '';
+        updateDisabled();
+
+        try {
+          await A.logout();
+          account = null;
+          addressForm.reset();
+          showAccount();
+
+          authMessage.textContent = t(
+            'Je bent uitgelogd.',
+            'You have been signed out.'
+          );
+
+          await prepareWidget();
+          resetWidget();
+        } catch (error) {
+          addressMessage.textContent = error.message;
+        } finally {
+          busy = false;
+          translate();
+        }
+      });
+
+    document.getElementById('account-button')
+      ?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        document.getElementById('account-heading').scrollIntoView();
+      }, true);
+
+    window.addEventListener('site-language-change', translate);
+
+    async function init() {
+      translate();
+
+      pageMessage.textContent = t(
+        'Je account wordt opgehaald...',
+        'Loading your account...'
+      );
+
+      try {
+        account = await A.getAccount();
+        pageMessage.textContent = '';
+      } catch (error) {
+        account = null;
+
+        if (error.status === 401) {
+          pageMessage.textContent = '';
+          authMessage.textContent = error.message;
+        } else {
+          pageMessage.textContent = error.message;
+        }
+      }
+
+      showAccount();
+      if (!account) await prepareWidget();
+    }
+
+    init();
+  </script>
+</body>
+</html>
