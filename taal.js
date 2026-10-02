@@ -18,7 +18,7 @@
     nl: {
       cart: 'Winkelmand (',
       home: 'Home',
-      products: 'Producten',
+      products: 'Shop',
       about: 'Over ons',
       contact: 'Contact',
       footer: '© 2026 Diatheke Atelier — Met zorg gemaakt.',
@@ -34,8 +34,8 @@
     en: {
       cart: 'Cart (',
       home: 'Home',
-      products: 'Products',
-      about: 'About us',
+      products: 'Shop',
+      about: 'Our Story',
       contact: 'Contact',
       footer: '© 2026 Diatheke Atelier — Made with care.',
       loading: 'Loading products...',
@@ -128,7 +128,10 @@
 
     document.querySelectorAll('.main-nav a').forEach((link, i) => {
       link.textContent = [
-        t.home, t.products, t.about, t.contact
+        t.home,
+        t.products,
+        t.about,
+        t.contact
       ][i] || link.textContent;
     });
 
@@ -142,13 +145,18 @@
     }
 
     set('footer p', t.footer);
-    set('#language-button', en ? 'Language: English' : 'Taal: Nederlands');
+
+    set(
+      '#language-button',
+      en ? 'Language: English' : 'Taal: Nederlands'
+    );
 
     const account = document.getElementById('account-button');
 
     if (account) {
       account.setAttribute(
-        'aria-label', en ? 'My account' : 'Mijn account'
+        'aria-label',
+        en ? 'My account' : 'Mijn account'
       );
     }
 
@@ -156,23 +164,31 @@
 
     if (page === 'index.html') {
       document.title = 'Diatheke Atelier';
+
       const h = homeWords[language];
 
       document.querySelectorAll('[data-home-text]').forEach(element => {
         const text = h[element.dataset.homeText];
-        if (typeof text === 'string') element.textContent = text;
+
+        if (typeof text === 'string') {
+          element.textContent = text;
+        }
       });
 
       document.querySelectorAll('[data-home-alt]').forEach(element => {
         const text = h[element.dataset.homeAlt];
-        if (typeof text === 'string') element.alt = text;
+
+        if (typeof text === 'string') {
+          element.alt = text;
+        }
       });
 
       const values = document.querySelector('.values');
 
       if (values) {
         values.setAttribute(
-          'aria-label', en ? 'Our values' : 'Onze waarden'
+          'aria-label',
+          en ? 'Our values' : 'Onze waarden'
         );
       }
 
@@ -187,12 +203,15 @@
     }
 
     if (page === 'producten.html') {
-      document.title = en
-        ? 'Products - Diatheke Atelier'
-        : 'Producten - Diatheke Atelier';
+      document.title = 'Shop - Diatheke Atelier';
 
-      set('header h1', en ? 'Our Products' : 'Onze Producten');
-      set('.section h2', en ? 'Handmade Candles' : 'Handgemaakte Kaarsen');
+      set('header h1', 'Shop');
+
+      set(
+        '.section h2',
+        en ? 'Handmade Candles' : 'Handgemaakte Kaarsen'
+      );
+
       set('#refresh-products-btn', t.refresh);
 
       const status = document.querySelector(
@@ -211,14 +230,16 @@
 
     if (page === 'over-ons.html') {
       document.title = en
-        ? 'About Us - Diatheke Atelier'
+        ? 'Our Story - Diatheke Atelier'
         : 'Over Ons - Diatheke Atelier';
 
-      set('header h1', en ? 'About Us' : 'Over Ons');
+      set('header h1', en ? 'Our Story' : 'Over Ons');
 
-      set('.container h2', en
-        ? 'The story behind Diatheke Atelier'
-        : 'Het verhaal achter Diatheke Atelier'
+      set(
+        '.container h2',
+        en
+          ? 'The story behind Diatheke Atelier'
+          : 'Het verhaal achter Diatheke Atelier'
       );
 
       const paragraphs = document.querySelectorAll('.container p');
@@ -239,19 +260,21 @@
     if (page === 'contact.html') {
       document.title = 'Contact - Diatheke Atelier';
 
-      set('.container h2', en
-        ? 'Questions or orders?'
-        : 'Interesse of bestellen?'
+      set(
+        '.container h2',
+        en ? 'Questions or orders?' : 'Interesse of bestellen?'
       );
 
-      set('.container p', en
-        ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
-        : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
+      set(
+        '.container p',
+        en
+          ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
+          : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
       );
 
-      set('.container .btn', en
-        ? 'Send a message'
-        : 'Stuur een berichtje'
+      set(
+        '.container .btn',
+        en ? 'Send a message' : 'Stuur een berichtje'
       );
     }
   }
@@ -289,6 +312,7 @@
     dialogReturnFocus = document.activeElement;
 
     const overlay = document.createElement('div');
+
     overlay.id = 'language-dialog';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
@@ -300,10 +324,12 @@
         <h2 id="language-title">
           Choose your language / Kies je taal
         </h2>
+
         <p id="language-description">
           Which language would you prefer?<br>
           In welke taal wil je de website bekijken?
         </p>
+
         <div class="language-actions">
           <button type="button" data-lang="en">English</button>
           <button type="button" data-lang="nl">Nederlands</button>
@@ -311,10 +337,14 @@
       </div>
     `;
 
-    const buttons = Array.from(overlay.querySelectorAll('[data-lang]'));
+    const buttons = Array.from(
+      overlay.querySelectorAll('[data-lang]')
+    );
 
     buttons.forEach(button => {
-      button.addEventListener('click', () => choose(button.dataset.lang));
+      button.addEventListener('click', () => {
+        choose(button.dataset.lang);
+      });
     });
 
     overlay.addEventListener('keydown', event => {
@@ -345,7 +375,9 @@
   const css = document.createElement('style');
 
   css.textContent = `
-    #language-button { cursor: pointer; }
+    #language-button {
+      cursor: pointer;
+    }
 
     #language-dialog {
       position: fixed;
@@ -403,7 +435,9 @@
       font: 14px Arial, sans-serif;
     }
 
-    .language-actions button:hover { background: #906739; }
+    .language-actions button:hover {
+      background: #906739;
+    }
 
     .language-actions button:focus-visible {
       outline: 2px solid #3d3024;
@@ -425,15 +459,19 @@
     document.getElementById('language-button')
       ?.addEventListener('click', dialog);
 
-    if (saved !== 'nl' && saved !== 'en') dialog();
+    if (saved !== 'nl' && saved !== 'en') {
+      dialog();
+    }
 
     if (
       document.querySelector('.header-actions') &&
       !document.getElementById('product-search-script')
     ) {
       const searchScript = document.createElement('script');
+
       searchScript.id = 'product-search-script';
       searchScript.src = searchScriptUrl;
+
       document.body.appendChild(searchScript);
     }
   }
