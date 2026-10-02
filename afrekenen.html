@@ -6,6 +6,28 @@
   <meta name="referrer" content="no-referrer">
   <title>Checkout - Diatheke Atelier</title>
   <link rel="stylesheet" href="stijl.css">
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+
+    .account-note {
+      margin: 0 0 20px;
+      padding: 12px 16px;
+      border: 1px solid #e8e1da;
+      border-radius: 6px;
+      background: #f4efe9;
+      color: #4a4543;
+      font-size: .95rem;
+    }
+
+    .account-note a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  </style>
 </head>
 
 <body>
@@ -24,6 +46,9 @@
 
     <section class="box">
       <h2 id="address-title">Shipping address</h2>
+
+      <p id="account-note" class="account-note"
+        role="status" aria-live="polite"></p>
 
       <form id="checkout-form">
         <fieldset id="customer-fields" disabled>
@@ -74,12 +99,16 @@
           <p id="country-note"></p>
         </fieldset>
 
-        <button id="pay" class="shop-button" type="submit" disabled></button>
+        <button id="pay" class="shop-button"
+          type="submit" disabled></button>
       </form>
 
       <p id="message" role="status" aria-live="polite"></p>
+
       <a id="continue" class="shop-button" hidden></a>
-      <button id="restart" class="shop-button" type="button" hidden></button>
+
+      <button id="restart" class="shop-button"
+        type="button" hidden></button>
     </section>
   </main>
 
@@ -90,15 +119,29 @@
   <script src="site-ui.js"></script>
   <script src="taal.js"></script>
   <script src="winkelmand.js"></script>
+  <script src="account.js"></script>
 
   <script>
     const ATTEMPT_KEY = 'licht-en-liefde-checkout-v1';
+
     const form = document.getElementById('checkout-form');
     const fields = document.getElementById('customer-fields');
     const pay = document.getElementById('pay');
     const message = document.getElementById('message');
     const continueLink = document.getElementById('continue');
     const restart = document.getElementById('restart');
+    const accountNote = document.getElementById('account-note');
+
+    const addressNames = [
+      'first_name',
+      'last_name',
+      'street',
+      'house_number',
+      'postal_code',
+      'city'
+    ];
+
+    const editedFields = new Set();
 
     let attempt = null;
     let items = [];
@@ -108,9 +151,18 @@
     let busy = false;
     let terminal = false;
     let storageError = false;
+    let accountState = 'loading';
+
+    form.addEventListener('input', event => {
+      if (event.target.name) {
+        editedFields.add(event.target.name);
+      }
+    });
 
     try {
-      attempt = JSON.parse(sessionStorage.getItem(ATTEMPT_KEY) || 'null');
+      attempt = JSON.parse(
+        sessionStorage.getItem(ATTEMPT_KEY) || 'null'
+      );
     } catch (_) {
       storageError = true;
     }
@@ -124,6 +176,73 @@
       attempt = null;
     }
 
+    function renderAccountNote() {
+      accountNote.replaceChildren();
+
+      if (accountState === 'loading') {
+        accountNote.textContent = Shop.text(
+          'Je accountgegevens worden gecontroleerd...',
+          'Checking your account details...'
+        );
+        return;
+      }
+
+      if (accountState === 'resuming') {
+        accountNote.textContent = Shop.text(
+          'Voor deze al gestarte bestelling gebruiken we de eerder ingevulde gegevens.',
+          'This existing order uses the details entered when it was started.'
+        );
+        return;
+      }
+
+      if (accountState === 'filled') {
+        accountNote.textContent = Shop.text(
+          'Je opgeslagen accountgegevens zijn ingevuld. Controleer je afleveradres. Je kunt het voor deze bestelling aanpassen; je opgeslagen adres blijft hetzelfde.',
+          'Your saved account details have been filled in. Check your shipping address. You can change it for this order; your saved address stays the same.'
+        );
+        return;
+      }
+
+      if (accountState === 'no-address') {
+        accountNote.textContent = Shop.text(
+          'Je bent ingelogd. Je e-mailadres is ingevuld, maar er is nog geen afleveradres opgeslagen in je account.',
+          'You are signed in. Your email address has been filled in, but your account does not have a saved shipping address yet.'
+        );
+        return;
+      }
+
+      if (accountState === 'error') {
+        accountNote.textContent = Shop.text(
+          'Je accountgegevens konden niet worden opgehaald. Je kunt je gegevens hieronder zelf invullen en gewoon verdergaan.',
+          'Your account details could not be loaded. You can enter your details below and continue.'
+        );
+        return;
+      }
+
+      accountNote.append(document.createTextNode(
+        accountState === 'expired'
+          ? Shop.text(
+              'Je inlogsessie is verlopen. Bestel zonder account of ',
+              'Your sign-in session has expired. Continue as a guest or '
+            )
+          : Shop.text(
+              'Je kunt bestellen zonder account. Heb je al een account? ',
+              'You can order as a guest. Already have an account? '
+            )
+      ));
+
+      const link = document.createElement('a');
+      link.href = 'account.html';
+      link.textContent = Shop.text('Log in', 'Sign in');
+
+      accountNote.append(link, document.createTextNode(
+        Shop.text(
+          ' en ga daarna opnieuw naar afrekenen.',
+          ' and then return to checkout.'
+        )
+      ));
+    }
+
     function translate() {
       document.title = Shop.text(
         'Afrekenen - Diatheke Atelier',
@@ -134,7 +253,7 @@
         Shop.text('Afrekenen', 'Checkout');
 
       document.getElementById('back').textContent =
-        Shop.text('← Terug naar producten', '← Back to products');
+        Shop.text('← Terug naar shop', '← Back to shop');
 
       document.getElementById('test-note').textContent = Shop.text(
         'Testmodus: er wordt geen echt geld afgeschreven. Verzending is voorlopig alleen binnen Nederland.',
@@ -179,12 +298,17 @@
       restart.textContent =
         Shop.text('Begin een nieuwe bestelling', 'Start a new order');
 
-      if (ready) renderSummary();
+      renderAccountNote();
+
+      if (ready) {
+        renderSummary();
+      }
     }
 
     function renderSummary() {
       const summary = document.getElementById('summary');
       summary.replaceChildren();
+
       let subtotal = 0;
 
       products.forEach((product, index) => {
@@ -192,8 +316,16 @@
         const row = Shop.element('div', 'line');
 
         row.append(
-          Shop.element('span', '', `${quantity} × ${Shop.title(product)}`),
-          Shop.element('span', '', Shop.money(product.cents * quantity))
+          Shop.element(
+            'span',
+            '',
+            `${quantity} × ${Shop.title(product)}`
+          ),
+          Shop.element(
+            'span',
+            '',
+            Shop.money(product.cents * quantity)
+          )
         );
 
         summary.append(row);
@@ -203,26 +335,101 @@
       expectedTotal = subtotal + 795;
 
       summary.append(
-        Shop.element('p', '',
-          `${Shop.text('Verzending', 'Shipping')}: ${Shop.money(795)}`),
-        Shop.element('strong', '',
-          `${Shop.text('Totaal', 'Total')}: ${Shop.money(expectedTotal)}`)
+        Shop.element(
+          'p',
+          '',
+          `${Shop.text('Verzending', 'Shipping')}: ${Shop.money(795)}`
+        ),
+        Shop.element(
+          'strong',
+          '',
+          `${Shop.text('Totaal', 'Total')}: ${Shop.money(expectedTotal)}`
+        )
       );
     }
 
     function saveAttempt() {
-      sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify(attempt));
+      sessionStorage.setItem(
+        ATTEMPT_KEY,
+        JSON.stringify(attempt)
+      );
     }
 
     function paymentPage(orderId) {
-      return 'betaling.html?order=' + encodeURIComponent(orderId) +
+      return 'betaling.html?order=' +
+        encodeURIComponent(orderId) +
         '&key=' + attempt.checkout_key;
+    }
+
+    function fillAccountField(name, value) {
+      const input = form.elements.namedItem(name);
+
+      if (
+        !input ||
+        typeof value !== 'string' ||
+        editedFields.has(name) ||
+        input.value.trim()
+      ) {
+        return;
+      }
+
+      input.value = value;
+    }
+
+    async function loadAccountDetails() {
+      if (attempt) {
+        accountState = 'resuming';
+        renderAccountNote();
+        return;
+      }
+
+      try {
+        if (!window.CustomerAccount) {
+          throw new Error('Account code unavailable');
+        }
+
+        const account = await CustomerAccount.getAccount();
+
+        if (!account) {
+          accountState = 'guest';
+          return;
+        }
+
+        fillAccountField('email', account.email);
+
+        const address = account.address;
+
+        if (
+          !address ||
+          typeof address !== 'object' ||
+          Array.isArray(address) ||
+          (address.country && address.country !== 'NL')
+        ) {
+          accountState = 'no-address';
+          return;
+        }
+
+        for (const name of addressNames) {
+          fillAccountField(name, address[name]);
+        }
+
+        accountState = 'filled';
+      } catch (error) {
+        accountState = error.status === 401
+          ? 'expired'
+          : 'error';
+      } finally {
+        renderAccountNote();
+      }
     }
 
     async function load() {
       translate();
 
       if (storageError) {
+        accountState = 'error';
+        renderAccountNote();
+
         message.textContent = Shop.text(
           'Je browser kan de bestelgegevens niet veilig bewaren. Sta websiteopslag toe voordat je afrekent.',
           'Allow website storage before checking out.'
@@ -233,6 +440,8 @@
       items = attempt ? attempt.items : Shop.snapshot();
 
       if (!items.length) {
+        accountNote.hidden = true;
+
         document.getElementById('summary').textContent =
           Shop.text('Je winkelmand is leeg.', 'Your cart is empty.');
         return;
@@ -241,7 +450,10 @@
       if (attempt) {
         for (const [name, value] of Object.entries(attempt.customer)) {
           const input = form.elements.namedItem(name);
-          if (input) input.value = value;
+
+          if (input && typeof value === 'string') {
+            input.value = value;
+          }
         }
 
         message.textContent = Shop.text(
@@ -251,11 +463,20 @@
       }
 
       try {
-        products = await Promise.all(
-          items.map(item => Shop.getProduct(item.product_id, true))
-        );
+        const [loadedProducts] = await Promise.all([
+          Promise.all(
+            items.map(item =>
+              Shop.getProduct(item.product_id, true)
+            )
+          ),
+          loadAccountDetails()
+        ]);
+
+        products = loadedProducts;
         ready = true;
+
         renderSummary();
+
         fields.disabled = Boolean(attempt);
         pay.disabled = false;
       } catch (_) {
@@ -268,17 +489,27 @@
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
-      if (!ready || busy || terminal) return;
+
+      if (!ready || busy || terminal) {
+        return;
+      }
+
+      if (!attempt && !form.reportValidity()) {
+        return;
+      }
 
       busy = true;
       pay.disabled = true;
       continueLink.hidden = true;
       message.textContent = '';
+
       translate();
 
       try {
         if (!attempt) {
-          if (JSON.stringify(Shop.snapshot()) !== JSON.stringify(items)) {
+          if (
+            JSON.stringify(Shop.snapshot()) !== JSON.stringify(items)
+          ) {
             throw new Error(Shop.text(
               'Je winkelmand is veranderd. Ververs deze pagina voordat je afrekent.',
               'Your cart has changed. Refresh this page before checking out.'
@@ -286,20 +517,32 @@
           }
 
           const customer = { country: 'NL' };
+
           const names = [
-            'first_name', 'last_name', 'email', 'street',
-            'house_number', 'postal_code', 'city'
+            'first_name',
+            'last_name',
+            'email',
+            'street',
+            'house_number',
+            'postal_code',
+            'city'
           ];
 
           for (const name of names) {
-            customer[name] = form.elements.namedItem(name).value.trim();
+            customer[name] =
+              form.elements.namedItem(name).value.trim();
           }
 
-          const random = crypto.getRandomValues(new Uint8Array(32));
+          const random = crypto.getRandomValues(
+            new Uint8Array(32)
+          );
 
           attempt = {
             checkout_key: [...random]
-              .map(byte => byte.toString(16).padStart(2, '0')).join(''),
+              .map(byte =>
+                byte.toString(16).padStart(2, '0')
+              )
+              .join(''),
             items,
             customer,
             language: window.siteLanguage.get()
@@ -311,7 +554,9 @@
 
         const response = await fetch(Shop.API + '/checkout', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(attempt),
           signal: AbortSignal.timeout(45000)
         });
@@ -321,7 +566,8 @@
         if (!response.ok) {
           if (
             response.status === 409 &&
-            data.error === 'Er is onvoldoende voorraad. Pas je winkelmand aan.'
+            data.error ===
+              'Er is onvoldoende voorraad. Pas je winkelmand aan.'
           ) {
             sessionStorage.removeItem(ATTEMPT_KEY);
             attempt = null;
@@ -354,9 +600,12 @@
           return;
         }
 
-        if (['canceled', 'expired', 'failed'].includes(data.status)) {
+        if (
+          ['canceled', 'expired', 'failed'].includes(data.status)
+        ) {
           terminal = true;
           restart.hidden = false;
+
           message.textContent = Shop.text(
             'Deze betaling is beëindigd zonder geslaagde betaling. Je kunt een nieuwe bestelling starten.',
             'This payment ended without success. You can start a new order.'
@@ -364,7 +613,10 @@
           return;
         }
 
-        if (data.status !== 'pending' || !data.checkout_url) {
+        if (
+          data.status !== 'pending' ||
+          !data.checkout_url
+        ) {
           throw new Error(Shop.text(
             'De bestelling wordt nog gecontroleerd. Hervat dezelfde bestelling.',
             'The order is still being checked. Resume the same order.'
@@ -375,17 +627,21 @@
 
         if (
           url.protocol !== 'https:' ||
-          !(url.hostname === 'mollie.com' ||
-            url.hostname.endsWith('.mollie.com'))
+          !(
+            url.hostname === 'mollie.com' ||
+            url.hostname.endsWith('.mollie.com')
+          )
         ) {
           throw new Error(Shop.text(
-            'Ongeldige betaallink.', 'Invalid payment link.'
+            'Ongeldige betaallink.',
+            'Invalid payment link.'
           ));
         }
 
         if (data.total_cents !== expectedTotal) {
           continueLink.href = url.href;
           continueLink.hidden = false;
+
           message.textContent = Shop.text(
             `De actuele prijzen zijn gewijzigd. Het bevestigde totaal inclusief verzending is ${Shop.money(data.total_cents)}. Controleer dit bedrag voordat je doorgaat.`,
             `Current prices have changed. The confirmed total including shipping is ${Shop.money(data.total_cents)}. Check this amount before continuing.`
@@ -395,7 +651,8 @@
         }
       } catch (error) {
         message.textContent =
-          error.name === 'TimeoutError' || error.name === 'AbortError'
+          error.name === 'TimeoutError' ||
+          error.name === 'AbortError'
             ? Shop.text(
                 'De verbinding duurde te lang. Hervat dezelfde bestelling; je gegevens zijn bewaard.',
                 'The connection timed out. Resume the same order; your details have been kept.'
@@ -404,6 +661,7 @@
       } finally {
         busy = false;
         pay.disabled = terminal;
+
         translate();
       }
     });
@@ -420,7 +678,11 @@
       }
     });
 
-    window.addEventListener('site-language-change', translate);
+    window.addEventListener(
+      'site-language-change',
+      translate
+    );
+
     load();
   </script>
 </body>
