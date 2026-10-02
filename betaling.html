@@ -1,117 +1,41 @@
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>Betaling - Licht & Liefde</title>
-
-  <style>
-    [hidden] { display: none !important; }
-
-    body {
-      margin: 0;
-      background: #fcfbfa;
-      color: #4a4543;
-      font: 16px/1.6 Georgia, serif;
-    }
-
-    header {
-      padding: 35px 20px;
-      background: #8c7b70;
-      color: white;
-      text-align: center;
-    }
-
-    h1 { margin: 0; }
-
-    main {
-      max-width: 650px;
-      margin: 35px auto;
-      padding: 0 20px;
-    }
-
-    .box {
-      padding: 25px;
-      background: white;
-      border: 1px solid #e8e1da;
-      border-radius: 8px;
-    }
-
-    a { color: #736359; }
-
-    button,
-    .button {
-      display: inline-block;
-      padding: 12px 20px;
-      border: 0;
-      border-radius: 4px;
-      background: #8c7b70;
-      color: white;
-      font: inherit;
-      cursor: pointer;
-      text-decoration: none;
-      margin: 5px 5px 5px 0;
-    }
-
-    button:disabled {
-      opacity: .6;
-      cursor: wait;
-    }
-
-    .note {
-      font-size: .9em;
-      color: #7a706b;
-    }
-
-    #status {
-      white-space: pre-line;
-      overflow-wrap: anywhere;
-    }
-
-    footer {
-      padding: 25px;
-      text-align: center;
-      background: #f4efe9;
-      color: #7a706b;
-      margin-top: 40px;
-    }
-  </style>
+  <title>Payment - Diatheke Atelier</title>
+  <link rel="stylesheet" href="stijl.css">
 </head>
 
 <body>
-  <header>
-    <h1 id="heading">Betaling controleren</h1>
+  <header class="page-banner">
+    <h1 id="heading">Checking payment</h1>
   </header>
 
-  <main>
+  <main class="container payment-container">
     <section class="box">
       <p id="status" role="status" aria-live="polite"></p>
-
       <p id="order-number" class="note"></p>
 
-      <button id="check" type="button"></button>
-
+      <button id="check" type="button" class="shop-button"></button>
       <a id="resume" class="button" hidden></a>
 
-      <p>
-        <a href="producten.html" id="back"></a>
-      </p>
-
+      <p><a href="producten.html" id="back"></a></p>
       <p class="note" id="test-note"></p>
     </section>
   </main>
 
   <footer>
-    <p>© 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+    <p>© 2026 Diatheke Atelier — Made with care.</p>
   </footer>
 
+  <script src="site-ui.js"></script>
   <script src="taal.js"></script>
   <script src="winkelmand.js"></script>
 
   <script>
     const ATTEMPT_KEY = 'licht-en-liefde-checkout-v1';
-
     const params = new URLSearchParams(location.search);
     const orderId = params.get('order');
     const key = params.get('key');
@@ -134,37 +58,26 @@
       const paid = data?.status === 'paid';
 
       document.title = Shop.text(
-        'Betaling - Licht & Liefde',
-        'Payment - Licht & Liefde'
+        'Betaling - Diatheke Atelier',
+        'Payment - Diatheke Atelier'
       );
 
-      document.getElementById('heading').textContent =
-        paid
-          ? Shop.text(
-              'Testbetaling geslaagd',
-              'Test payment successful'
-            )
-          : Shop.text(
-              'Betaling controleren',
-              'Checking payment'
-            );
+      document.getElementById('heading').textContent = paid
+        ? Shop.text('Testbetaling geslaagd', 'Test payment successful')
+        : Shop.text('Betaling controleren', 'Checking payment');
 
-      document.getElementById('back').textContent =
-        Shop.text(
-          '← Terug naar producten',
-          '← Back to products'
-        );
+      document.getElementById('back').textContent = Shop.text(
+        '← Terug naar producten', '← Back to products'
+      );
 
-      document.getElementById('test-note').textContent =
-        Shop.text(
-          'Dit is een testbetaling. Er is geen echt geld afgeschreven. Een geslaagde testbetaling werkt de ingestelde voorraad wel bij.',
-          'This is a test payment. No real money has been charged. A successful test payment does update the configured stock.'
-        );
+      document.getElementById('test-note').textContent = Shop.text(
+        'Dit is een testbetaling. Er is geen echt geld afgeschreven. Een geslaagde testbetaling werkt de ingestelde voorraad wel bij.',
+        'This is a test payment. No real money has been charged. A successful test payment does update the configured stock.'
+      );
 
-      document.getElementById('order-number').textContent =
-        valid
-          ? `${Shop.text('Bestelnummer', 'Order number')}: ${orderId}`
-          : '';
+      document.getElementById('order-number').textContent = valid
+        ? `${Shop.text('Bestelnummer', 'Order number')}: ${orderId}`
+        : '';
 
       button.textContent = busy
         ? Shop.text('Even controleren...', 'Checking...')
@@ -219,24 +132,18 @@
 
       document.getElementById('status').textContent = message;
 
-      if (
-        data?.status === 'pending' &&
-        data.checkout_url
-      ) {
+      if (data?.status === 'pending' && data.checkout_url) {
         try {
           const url = new URL(data.checkout_url);
 
           if (
             url.protocol === 'https:' &&
-            (
-              url.hostname === 'mollie.com' ||
-              url.hostname.endsWith('.mollie.com')
-            )
+            (url.hostname === 'mollie.com' ||
+              url.hostname.endsWith('.mollie.com'))
           ) {
             resume.href = url.href;
             resume.textContent = Shop.text(
-              'Terug naar deze betaling',
-              'Return to this payment'
+              'Terug naar deze betaling', 'Return to this payment'
             );
             resume.hidden = false;
           }
@@ -259,16 +166,9 @@
         !attempt ||
         attempt.checkout_key !== key ||
         !Array.isArray(attempt.items)
-      ) {
-        return;
-      }
+      ) return;
 
-      if (
-        attempt.order_id &&
-        attempt.order_id !== orderId
-      ) {
-        return;
-      }
+      if (attempt.order_id && attempt.order_id !== orderId) return;
 
       if (data.status === 'paid') {
         await Shop.completeOrder(orderId, attempt.items);
@@ -292,11 +192,8 @@
 
       try {
         const response = await fetch(
-          Shop.API +
-          '/order?order=' +
-          encodeURIComponent(orderId) +
-          '&key=' +
-          key,
+          Shop.API + '/order?order=' +
+          encodeURIComponent(orderId) + '&key=' + key,
           {
             cache: 'no-store',
             signal: AbortSignal.timeout(20000)
@@ -342,10 +239,7 @@
     });
 
     window.addEventListener('site-language-change', render);
-
-    window.addEventListener('pagehide', () => {
-      clearTimeout(timer);
-    });
+    window.addEventListener('pagehide', () => clearTimeout(timer));
 
     render();
     check();
