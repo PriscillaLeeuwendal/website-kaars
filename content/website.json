@@ -1,0 +1,91 @@
+{
+  "home": {
+    "hero_image": "/images/diatheke-hero.png",
+    "wall_image": "/images/diatheke-wall-lights.png",
+    "candle_image": "/images/diatheke-candles.png",
+    "vase_image": "/images/diatheke-vases.png",
+    "en": {
+      "eyebrowFirst": "Sacred spaces",
+      "eyebrowSecond": "for everyday life.",
+      "titleFirst": "Illuminating",
+      "titleSecond": "His promises",
+      "tagline": "Covenant · Light · Presence",
+      "collection": "Shop the collection",
+      "valueOneTitle": "Faith-Centered Design",
+      "valueOneFirst": "Refined home décor that illuminates",
+      "valueOneSecond": "His promises.",
+      "valueTwoTitle": "Timeless Craftsmanship",
+      "valueTwoFirst": "Natural materials. Lasting beauty.",
+      "valueTwoSecond": "Eternal meaning.",
+      "valueThreeTitle": "A More Sacred Home",
+      "valueThreeFirst": "Create spaces that draw you",
+      "valueThreeSecond": "closer to His presence.",
+      "wallLights": "Wall Lights",
+      "candles": "Candles & Vessels",
+      "vases": "Vases & Décor",
+      "shopNow": "Shop Now",
+      "wallImage": "Illuminated stone cross on a warm beige wall",
+      "candleImage": "Warmly glowing stone candle vessels",
+      "vaseImage": "Textured vase with olive branches"
+    },
+    "nl": {
+      "eyebrowFirst": "Een plek voor geloof",
+      "eyebrowSecond": "in het dagelijks leven.",
+      "titleFirst": "Zijn beloften",
+      "titleSecond": "in het licht",
+      "tagline": "Verbond · Licht · Aanwezigheid",
+      "collection": "Bekijk de collectie",
+      "valueOneTitle": "Ontwerp vanuit geloof",
+      "valueOneFirst": "Verfijnde woondecoratie die",
+      "valueOneSecond": "Zijn beloften laat stralen.",
+      "valueTwoTitle": "Tijdloos vakmanschap",
+      "valueTwoFirst": "Natuurlijke materialen. Blijvende schoonheid.",
+      "valueTwoSecond": "Eeuwige betekenis.",
+      "valueThreeTitle": "Een huis vol geloof",
+      "valueThreeFirst": "Creëer plekken die je dichter",
+      "valueThreeSecond": "bij Zijn aanwezigheid brengen.",
+      "wallLights": "Wandverlichting",
+      "candles": "Kaarsen & houders",
+      "vases": "Vazen & decoratie",
+      "shopNow": "Bekijk de producten",
+      "wallImage": "Verlicht stenen kruis op een warme beige muur",
+      "candleImage": "Warm verlichte stenen kaarshouders",
+      "vaseImage": "Vaas met structuur en olijftakken"
+    }
+  },
+  "story": {
+    "image": "/images/diatheke-hero.png",
+    "en": {
+      "page_title": "Our Story",
+      "heading": "The story behind Diatheke Atelier",
+      "paragraph_one": "Welcome to Diatheke Atelier! We believe a candle can bring more than a cosy atmosphere: it can also bring warmth and hope into your home.",
+      "paragraph_two": "Our candles are handmade and feature carefully selected Christian messages and encouraging quotes. Whether you are looking for a meaningful gift or a peaceful moment for yourself, every candle is made with love, especially for you.",
+      "image_alt": ""
+    },
+    "nl": {
+      "page_title": "Over ons",
+      "heading": "Het verhaal achter Diatheke Atelier",
+      "paragraph_one": "Welkom bij Diatheke Atelier! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.",
+      "paragraph_two": "Onze kaarsen worden met de hand gemaakt en voorzien van zorgvuldig geselecteerde christelijke teksten en bemoedigende quotes. Of je nu op zoek bent naar een dierbaar cadeau voor iemand die het nodig heeft, of gewoon een sfeervol moment voor jezelf wilt creëren: elk exemplaar wordt met liefde gemaakt, speciaal voor jou.",
+      "image_alt": ""
+    }
+  },
+  "contact": {
+    "image": "/images/diatheke-vases.png",
+    "email": "info@jouwmail.nl",
+    "en": {
+      "page_title": "Contact",
+      "heading": "Questions or orders?",
+      "description": "Would you like to order something or request a personal message on a candle? Feel free to get in touch!",
+      "button": "Send a message",
+      "image_alt": ""
+    },
+    "nl": {
+      "page_title": "Contact",
+      "heading": "Interesse of bestellen?",
+      "description": "Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!",
+      "button": "Stuur een berichtje",
+      "image_alt": ""
+    }
+  }
+}
