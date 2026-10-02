@@ -1,233 +1,727 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Licht & Liefde - Handgemaakte Kaarsen</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Diatheke Atelier — faith-centered home décor. Covenant. Light. Presence.">
+  <title>Diatheke Atelier</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <style>
+    :root {
+      --cream: #faf7f2;
+      --ink: #3d3024;
+      --gold: #a67c48;
+      --line: #d7c5ae;
+    }
 
-    <style>
-        @font-face {
-            font-family: 'Marseille';
-            src: url('fonts/Marseille.ttf') format('truetype');
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: Georgia, serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fcfbfa;
-            color: #4a4543;
-            line-height: 1.6;
-        }
+    body {
+      margin: 0;
+      background: #f0ebe5;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.5;
+    }
 
-        header {
-            background-image:
-                linear-gradient(
-                    rgba(0, 0, 0, 0.35),
-                    rgba(0, 0, 0, 0.35)
-                ),
-                url('images/hero-banner.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 100px 20px 60px;
-            text-align: center;
-            position: relative;
-            color: #ffffff;
-            border-bottom: 1px solid #e8e1da;
-        }
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        .admin-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #8c7b70;
-            color: white;
-            padding: 8px 14px;
-            font-family: sans-serif;
-            font-size: 0.85em;
-            text-decoration: none;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    button {
+      font: inherit;
+    }
 
-        .admin-btn:hover {
-            background-color: #736359;
-            color: white;
-        }
+    a {
+      color: inherit;
+    }
 
-        .cart-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: #8c7b70;
-            color: white;
-            padding: 8px 14px;
-            font-family: sans-serif;
-            font-size: 0.85em;
-            text-decoration: none;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    a:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 5px;
+    }
 
-        .cart-link:hover {
-            background-color: #736359;
-        }
+    .site-shell {
+      max-width: 1600px;
+      margin: 16px auto;
+      background: var(--cream);
+      border-radius: 9px;
+      overflow: hidden;
+      box-shadow: 0 5px 30px rgba(62, 45, 27, .08);
+    }
 
-        header h1 {
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 3.5em;
-            margin-bottom: 10px;
-        }
+    .site-header {
+      min-height: 86px;
+      padding: 15px 6%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 28px;
+      background: #f7f2eb;
+    }
 
-        header p {
-            font-size: 1.2em;
-            color: #f2eeea;
-            margin-bottom: 30px;
-        }
+    .brand {
+      width: fit-content;
+      text-decoration: none;
+      color: var(--gold);
+      text-align: center;
+      line-height: 1;
+    }
 
-        .main-nav {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+    .brand-name {
+      display: block;
+      font-size: clamp(22px, 2.4vw, 34px);
+      letter-spacing: .13em;
+      font-weight: normal;
+    }
 
-        .main-nav a {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 18px;
-            text-decoration: none;
-            border-radius: 20px;
-            font-family: sans-serif;
-            font-size: 0.9em;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
+    .brand-subtitle {
+      display: block;
+      margin-top: 7px;
+      font-size: 10px;
+      letter-spacing: .48em;
+    }
 
-        .main-nav a:hover,
-        .main-nav a.active {
-            background-color: rgba(255, 255, 255, 0.4);
-        }
+    .main-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(18px, 2.5vw, 38px);
+    }
 
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-            text-align: center;
-        }
+    .main-nav a {
+      padding: 9px 0;
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+      font-size: 11px;
+      letter-spacing: .2em;
+      border-bottom: 1px solid transparent;
+    }
 
-        .section h2 {
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 2.2em;
-            margin-bottom: 20px;
-            color: #3b3533;
-        }
+    .main-nav a:hover,
+    .main-nav a.active {
+      border-bottom-color: var(--gold);
+    }
 
-        .btn {
-            display: inline-block;
-            background-color: #8c7b70;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 15px;
-            font-family: sans-serif;
-            font-size: 0.9em;
-        }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 22px;
+    }
 
-        .btn:hover {
-            background-color: #736359;
-        }
+    .icon-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 40px;
+      padding: 5px;
+      border: 0;
+      background: transparent;
+      color: #5b4631;
+      text-decoration: none;
+      cursor: pointer;
+    }
 
-        .shop-button {
-            background-color: #8c7b70;
-            color: white;
-            padding: 12px 22px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font: 0.95em sans-serif;
-        }
+    .icon-button svg {
+      width: 25px;
+      height: 25px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
-        .shop-button:hover {
-            background-color: #736359;
-        }
+    .cart-count {
+      position: absolute;
+      top: 0;
+      right: -3px;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: white;
+      font: 10px/17px Arial, sans-serif;
+      text-align: center;
+    }
 
-        footer {
-            text-align: center;
-            padding: 30px;
-            background-color: #f4efe9;
-            color: #7a706b;
-            font-size: 0.9em;
-            border-top: 1px solid #e8e1da;
-            margin-top: 50px;
-        }
+    .hero {
+      position: relative;
+      min-height: 580px;
+      aspect-ratio: 2.37 / 1;
+      display: flex;
+      align-items: center;
+      background:
+        url("images/diatheke-hero.png") center / cover no-repeat;
+    }
 
-        @media (max-width: 420px) {
-            .admin-btn {
-                top: 65px;
-            }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 245, 231, .79) 0%,
+        rgba(255, 245, 231, .58) 29%,
+        rgba(255, 245, 231, .08) 49%,
+        transparent 62%
+      );
+      pointer-events: none;
+    }
 
-            header {
-                padding-top: 125px;
-            }
-        }
-    </style>
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      width: 48%;
+      padding: 42px 0 46px 11%;
+    }
+
+    .hero-eyebrow {
+      margin: 0 0 30px;
+      font-size: 14px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-size: clamp(42px, 4.6vw, 72px);
+      font-weight: normal;
+      line-height: 1.02;
+      letter-spacing: -.035em;
+    }
+
+    .hero-rule {
+      width: 73px;
+      height: 1px;
+      margin: 28px 0 17px;
+      background: var(--gold);
+    }
+
+    .hero-tagline {
+      margin: 0 0 35px;
+      font-size: 13px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+    }
+
+    .collection-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      padding: 15px 27px;
+      background: var(--gold);
+      color: #fffaf2;
+      text-decoration: none;
+      text-transform: uppercase;
+      font: 11px Arial, sans-serif;
+      letter-spacing: .18em;
+    }
+
+    .collection-button:hover {
+      background: #906739;
+    }
+
+    .collection-button svg {
+      width: 20px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.3;
+    }
+
+    .values {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 25px 5% 18px;
+    }
+
+    .value {
+      position: relative;
+      padding: 0 28px;
+      text-align: center;
+    }
+
+    .value + .value::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .value-icon {
+      width: 43px;
+      height: 43px;
+      margin-bottom: 7px;
+      fill: none;
+      stroke: #b18b58;
+      stroke-width: 1.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .value h2 {
+      margin: 0 0 2px;
+      font-size: 19px;
+      font-weight: normal;
+    }
+
+    .value p {
+      margin: 0;
+      color: #81766b;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      padding: 0 3% 20px;
+    }
+
+    .category {
+      position: relative;
+      display: block;
+      aspect-ratio: 1.8 / 1;
+      overflow: hidden;
+      color: #fff9ef;
+      text-decoration: none;
+      background: #c5a27a;
+    }
+
+    .category img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .35s ease;
+    }
+
+    .category:hover img {
+      transform: scale(1.035);
+    }
+
+    .category::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        transparent 35%,
+        rgba(38, 24, 12, .58)
+      );
+    }
+
+    .category-caption {
+      position: absolute;
+      left: 27px;
+      right: 15px;
+      bottom: 17px;
+      z-index: 1;
+    }
+
+    .category-title {
+      display: block;
+      font-size: 17px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .category-cta {
+      display: block;
+      margin-top: 2px;
+      font: 12px Arial, sans-serif;
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 20px 4%;
+      border-top: 1px solid #e6dbcc;
+      color: #81766b;
+      font-size: 12px;
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    #language-button {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: #65513b;
+      cursor: pointer;
+      font: 12px Arial, sans-serif;
+    }
+
+    .shop-button {
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--gold);
+      color: white;
+      cursor: pointer;
+      font: .95em Arial, sans-serif;
+    }
+
+    .shop-button:hover {
+      background: #906739;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .category img {
+        transition: none;
+      }
+    }
+
+    @media (max-width: 1050px) {
+      .site-header {
+        padding-inline: 4%;
+        gap: 18px;
+      }
+
+      .main-nav {
+        gap: 18px;
+      }
+
+      .main-nav a {
+        font-size: 10px;
+        letter-spacing: .12em;
+      }
+
+      .header-actions {
+        gap: 12px;
+      }
+
+      .hero {
+        min-height: 490px;
+      }
+
+      .hero-content {
+        width: 54%;
+        padding-left: 8%;
+      }
+
+      .hero-eyebrow,
+      .hero-tagline {
+        font-size: 11px;
+      }
+
+      .value {
+        padding-inline: 15px;
+      }
+
+      .value h2 {
+        font-size: 17px;
+      }
+
+      .value p {
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .site-shell {
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .site-header {
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        padding: 18px 20px 12px;
+      }
+
+      .brand-name {
+        font-size: 26px;
+      }
+
+      .main-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .main-nav a {
+        font-size: 10px;
+        letter-spacing: .1em;
+      }
+
+      .header-actions {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .hero {
+        min-height: 570px;
+        aspect-ratio: auto;
+        align-items: flex-start;
+        background-position: 61% center;
+      }
+
+      .hero::before {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 245, 231, .9),
+          rgba(255, 245, 231, .65) 45%,
+          rgba(255, 245, 231, .05)
+        );
+      }
+
+      .hero-content {
+        width: 90%;
+        padding: 62px 24px 55px;
+      }
+
+      .hero-title {
+        font-size: clamp(42px, 9.5vw, 62px);
+      }
+
+      .hero-eyebrow {
+        margin-bottom: 27px;
+        font-size: 11px;
+      }
+
+      .hero-tagline {
+        font-size: 10px;
+        letter-spacing: .23em;
+      }
+
+      .values {
+        grid-template-columns: 1fr;
+        gap: 23px;
+        padding: 28px 20px;
+      }
+
+      .value + .value::before {
+        display: none;
+      }
+
+      .value h2 {
+        font-size: 19px;
+      }
+
+      .value p {
+        font-size: 15px;
+      }
+
+      .categories {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 0 20px 25px;
+      }
+
+      .category-caption {
+        left: 22px;
+        bottom: 20px;
+      }
+
+      footer {
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <header>
-        <a href="#winkelmand" class="cart-link" data-open-cart>
-            Winkelmand (<span data-cart-count>0</span>)
-        </a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Diatheke Atelier — Home">
+        <span class="brand-name">DIATHĒKĒ</span>
+        <span class="brand-subtitle">ATELIER</span>
+      </a>
 
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html" class="active" aria-current="page">Home</a>
+        <a href="producten.html">Products</a>
+        <a href="over-ons.html">About us</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+
+      <div class="header-actions">
         <button
-            type="button"
-            id="language-button"
-            class="admin-btn"
+          type="button"
+          class="icon-button"
+          id="account-button"
+          aria-label="My account"
         >
-            Taal: Nederlands
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="3.5"></circle>
+            <path d="M4.5 21v-2.5a7.5 7.5 0 0 1 15 0V21z"></path>
+          </svg>
         </button>
 
-        <h1>Licht & Liefde</h1>
-
-        <p>
-            Handgemaakte kaarsen met een bemoedigende christelijke tekst
-        </p>
-
-        <nav class="main-nav">
-            <a href="index.html" class="active">Home</a>
-            <a href="producten.html">Producten</a>
-            <a href="over-ons.html">Over ons</a>
-            <a href="contact.html">Contact</a>
-        </nav>
+        <a
+          href="#winkelmand"
+          class="cart-link icon-button"
+          data-open-cart
+          data-icon-cart
+          aria-label="Cart"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 8h14l1 13H4z"></path>
+            <path d="M9 9V6a3 3 0 0 1 6 0v3"></path>
+          </svg>
+          <span class="cart-count" data-cart-count>0</span>
+        </a>
+      </div>
     </header>
 
-    <main class="container">
-        <h2>Welkom bij Licht & Liefde</h2>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-content">
+          <p class="hero-eyebrow">
+            <span data-home-text="eyebrowFirst">Sacred spaces</span><br>
+            <span data-home-text="eyebrowSecond">for everyday life.</span>
+          </p>
 
-        <p>
-            Elke kaars wordt met liefde gemaakt en voorzien van een
-            zorgvuldig gekozen Bijbeltekst of christelijke quote.
-            Perfect als warm cadeau voor een dierbare of om een
-            sfeervol, hoopvol moment in huis te creëren.
-        </p>
+          <h1 class="hero-title" id="hero-title">
+            <span data-home-text="titleFirst">Illuminating</span><br>
+            <span data-home-text="titleSecond">His promises</span>
+          </h1>
 
-        <a href="producten.html" class="btn">
-            Bekijk onze producten
+          <div class="hero-rule" aria-hidden="true"></div>
+
+          <p class="hero-tagline" data-home-text="tagline">
+            Covenant. Light. Presence.
+          </p>
+
+          <a href="producten.html" class="collection-button">
+            <span data-home-text="collection">Shop the collection</span>
+            <svg viewBox="0 0 24 14" aria-hidden="true">
+              <path d="M1 7h21M16 1l6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <section class="values" aria-label="Our values">
+        <article class="value">
+          <svg class="value-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M11 43V23C11 13 17 7 24 3c7 4 13 10 13 20v20z"></path>
+            <path d="M24 3v40M11 23h26M15 11l9 12 9-12"></path>
+          </svg>
+          <h2 data-home-text="valueOneTitle">Faith-Centered Design</h2>
+          <p>
+            <span data-home-text="valueOneFirst">Refined home décor that illuminates</span><br>
+            <span data-home-text="valueOneSecond">His promises.</span>
+          </p>
+        </article>
+
+        <article class="value">
+          <svg class="value-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="10"></circle>
+            <path d="M24 2v7M24 39v7M2 24h7M39 24h7M8 8l5 5M35 35l5 5M8 40l5-5M35 13l5-5"></path>
+          </svg>
+          <h2 data-home-text="valueTwoTitle">Timeless Craftsmanship</h2>
+          <p>
+            <span data-home-text="valueTwoFirst">Natural materials. Lasting beauty.</span><br>
+            <span data-home-text="valueTwoSecond">Eternal meaning.</span>
+          </p>
+        </article>
+
+        <article class="value">
+          <svg class="value-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M10 44C22 33 29 21 37 4M20 33C9 32 8 24 11 19c8 1 11 6 9 14zM27 23c-8-2-9-9-5-15 7 3 8 8 5 15zM29 21c1-8 7-12 15-10-1 7-7 11-15 10zM21 34c5-8 11-10 18-5-4 6-10 8-18 5z"></path>
+          </svg>
+          <h2 data-home-text="valueThreeTitle">A More Sacred Home</h2>
+          <p>
+            <span data-home-text="valueThreeFirst">Create spaces that draw you</span><br>
+            <span data-home-text="valueThreeSecond">closer to His presence.</span>
+          </p>
+        </article>
+      </section>
+
+      <section class="categories" aria-label="Explore the collection">
+        <a href="producten.html" class="category">
+          <img
+            src="images/diatheke-wall-lights.png"
+            alt="Illuminated stone cross on a warm beige wall"
+            data-home-alt="wallImage"
+            loading="lazy"
+            width="1672"
+            height="941"
+          >
+          <span class="category-caption">
+            <span class="category-title" data-home-text="wallLights">Wall Lights</span>
+            <span class="category-cta">
+              <span data-home-text="shopNow">Shop Now</span> →
+            </span>
+          </span>
         </a>
+
+        <a href="producten.html" class="category">
+          <img
+            src="images/diatheke-candles.png"
+            alt="Warmly glowing stone candle vessels"
+            data-home-alt="candleImage"
+            loading="lazy"
+            width="1684"
+            height="934"
+          >
+          <span class="category-caption">
+            <span class="category-title" data-home-text="candles">Candles &amp; Vessels</span>
+            <span class="category-cta">
+              <span data-home-text="shopNow">Shop Now</span> →
+            </span>
+          </span>
+        </a>
+
+        <a href="producten.html" class="category">
+          <img
+            src="images/diatheke-vases.png"
+            alt="Textured vase with olive branches"
+            data-home-alt="vaseImage"
+            loading="lazy"
+            width="1682"
+            height="934"
+          >
+          <span class="category-caption">
+            <span class="category-title" data-home-text="vases">Vases &amp; Décor</span>
+            <span class="category-cta">
+              <span data-home-text="shopNow">Shop Now</span> →
+            </span>
+          </span>
+        </a>
+      </section>
     </main>
 
     <footer>
-        <p>&copy; 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+      <p>© 2026 Diatheke Atelier — Made with care.</p>
+      <button type="button" id="language-button">Language: English</button>
     </footer>
+  </div>
 
-    <script src="taal.js"></script>
-    <script src="winkelmand.js"></script>
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
+
+  <script>
+    document.getElementById('account-button').addEventListener('click', () => {
+      alert(
+        window.siteLanguage.get() === 'nl'
+          ? 'Een account aanmaken is binnenkort beschikbaar.'
+          : 'Creating an account will be available soon.'
+      );
+    });
+  </script>
 </body>
 </html>
