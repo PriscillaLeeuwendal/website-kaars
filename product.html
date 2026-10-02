@@ -1,502 +1,388 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product - Licht & Liefde</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product - Licht & Liefde</title>
 
-    <link rel="preconnect" href="https://app.snipcart.com">
-    <link rel="preconnect" href="https://cdn.snipcart.com">
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 
-    <style>
-        @font-face {
-            font-family: 'Marseille';
-            src: url('fonts/Marseille.ttf') format('truetype');
-        }
+  <style>
+    @font-face {
+      font-family: Marseille;
+      src: url('fonts/Marseille.ttf') format('truetype');
+    }
 
-        body {
-            font-family: Georgia, serif;
-            margin: 0;
-            background: #fcfbfa;
-            color: #4a4543;
-            line-height: 1.6;
-        }
+    body {
+      margin: 0;
+      background: #fcfbfa;
+      color: #4a4543;
+      font-family: Georgia, serif;
+      line-height: 1.6;
+    }
 
-        header {
-            background-image: linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)), url('images/hero-banner.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 80px 20px 40px;
-            text-align: center;
-            position: relative;
-            color: #fff;
-            border-bottom: 1px solid #e8e1da;
-        }
+    header {
+      position: relative;
+      padding: 80px 20px 40px;
+      color: white;
+      text-align: center;
+      background:
+        linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+        url('images/hero-banner.jpg') center/cover;
+      border-bottom: 1px solid #e8e1da;
+    }
 
-        .cart-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #8c7b70;
-            color: #fff;
-            padding: 8px 14px;
-            font: .85em sans-serif;
-            text-decoration: none;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,.2);
-        }
+    .cart-link {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      background: #8c7b70;
+      color: white;
+      text-decoration: none;
+      font: .85em sans-serif;
+      box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    }
 
-        .cart-link:hover {
-            background: #736359;
-            color: #fff;
-        }
+    .cart-link:hover,
+    .shop-button:hover {
+      background: #736359;
+    }
 
-        header h1 {
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
+    header h1 {
+      margin-bottom: 10px;
+      font: 3em Marseille, Georgia, serif;
+    }
 
-        .main-nav {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+    .main-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
 
-        .main-nav a {
-            background: rgba(255,255,255,.2);
-            color: #fff;
-            padding: 8px 18px;
-            text-decoration: none;
-            border-radius: 20px;
-            font: .9em sans-serif;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,.4);
-        }
+    .main-nav a {
+      padding: 8px 18px;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 20px;
+      background: rgba(255,255,255,.2);
+      color: white;
+      text-decoration: none;
+      font: .9em sans-serif;
+      backdrop-filter: blur(5px);
+    }
 
-        .main-nav a:hover,
-        .main-nav a.active {
-            background: rgba(255,255,255,.4);
-        }
+    .main-nav a:hover,
+    .main-nav a.active {
+      background: rgba(255,255,255,.4);
+    }
 
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-            min-height: 250px;
-        }
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      min-height: 250px;
+    }
 
-        .back-link {
-            display: inline-block;
-            margin-bottom: 25px;
-            color: #736359;
-        }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 25px;
+      color: #736359;
+    }
 
-        .product-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            gap: 45px;
-            align-items: start;
-        }
+    .product-layout {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 45px;
+      align-items: start;
+    }
 
-        .product-photo {
-            width: 100%;
-            max-height: 580px;
-            object-fit: contain;
-            background: #fff;
-            border: 1px solid #e8e1da;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
+    .product-photo {
+      width: 100%;
+      max-height: 580px;
+      object-fit: contain;
+      background: white;
+      border: 1px solid #e8e1da;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
 
-        .product-info h2 {
-            margin: 0 0 10px;
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 2.5em;
-            color: #3b3533;
-        }
+    .product-info h2 {
+      margin: 0 0 10px;
+      color: #3b3533;
+      font: 2.5em Marseille, Georgia, serif;
+    }
 
-        .product-price {
-            font-size: 1.4em;
-            font-weight: bold;
-            margin: 0 0 22px;
-        }
+    .product-price {
+      margin: 0 0 22px;
+      font-size: 1.4em;
+      font-weight: bold;
+    }
 
-        .product-description {
-            white-space: pre-line;
-            margin-bottom: 28px;
-        }
+    .product-description {
+      margin-bottom: 28px;
+      white-space: pre-line;
+    }
 
-        .stock-message {
-            padding: 12px 16px;
-            margin: 0 0 20px;
-            background: #f4efe9;
-            border: 1px solid #e8e1da;
-            border-radius: 6px;
-            font-size: .95em;
-        }
+    .stock-message {
+      padding: 12px 16px;
+      margin: 0 0 20px;
+      border: 1px solid #e8e1da;
+      border-radius: 6px;
+      background: #f4efe9;
+      font-size: .95em;
+    }
 
-        .stock-message.sold-out {
-            background: #faeeeb;
-            border-color: #e7c7bf;
-            color: #8b4437;
-        }
+    .stock-message.sold-out {
+      border-color: #e7c7bf;
+      background: #faeeeb;
+      color: #8b4437;
+    }
 
-        .stock-message.stock-neutral {
-            color: #7a706b;
-        }
+    .stock-message.stock-neutral { color: #7a706b; }
 
-        .snipcart-add-item {
-            background: #8c7b70;
-            color: #fff;
-            padding: 12px 22px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font: .95em sans-serif;
-        }
+    .shop-button {
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 4px;
+      background: #8c7b70;
+      color: white;
+      cursor: pointer;
+      font: .95em sans-serif;
+    }
 
-        .snipcart-add-item:hover {
-            background: #736359;
-        }
+    .shop-button:disabled {
+      background: #b6aaa2;
+      cursor: not-allowed;
+    }
 
-        .snipcart-add-item:disabled {
-            background: #b6aaa2;
-            cursor: not-allowed;
-        }
+    footer {
+      margin-top: 50px;
+      padding: 30px;
+      border-top: 1px solid #e8e1da;
+      background: #f4efe9;
+      color: #7a706b;
+      text-align: center;
+      font-size: .9em;
+    }
 
-        footer {
-            text-align: center;
-            padding: 30px;
-            background: #f4efe9;
-            color: #7a706b;
-            font-size: .9em;
-            border-top: 1px solid #e8e1da;
-            margin-top: 50px;
-        }
+    @media(max-width: 700px) {
+      .product-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
 
-        @media (max-width: 700px) {
-            .product-layout {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-
-            .product-info h2 {
-                font-size: 2em;
-            }
-        }
-    </style>
+      .product-info h2 { font-size: 2em; }
+    }
+  </style>
 </head>
+
 <body>
-    <header>
-        <a href="#cart" class="cart-link snipcart-checkout">
-            Winkelmand (<span class="snipcart-items-count">0</span>)
-        </a>
+  <header>
+    <a href="#winkelmand" class="cart-link" data-open-cart>
+      Winkelmand (<span data-cart-count>0</span>)
+    </a>
 
-        <h1>Product</h1>
+    <h1>Product</h1>
 
-        <nav class="main-nav">
-            <a href="index.html">Home</a>
-            <a href="producten.html" class="active">Producten</a>
-            <a href="over-ons.html">Over ons</a>
-            <a href="contact.html">Contact</a>
-        </nav>
-    </header>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="producten.html" class="active">Producten</a>
+      <a href="over-ons.html">Over ons</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
 
-    <main class="container">
-        <a href="producten.html" class="back-link">← Terug naar producten</a>
+  <main class="container">
+    <a href="producten.html" class="back-link">
+      ← Terug naar producten
+    </a>
 
-        <div id="product-detail" aria-live="polite">
-            <p>Product wordt geladen...</p>
-        </div>
-    </main>
+    <div id="product-detail" aria-live="polite">
+      <p>Product wordt geladen...</p>
+    </div>
+  </main>
 
-    <footer>
-        <p>&copy; 2026 Licht & Liefde - Handgemaakt met zorg.</p>
-    </footer>
+  <footer>
+    <p>© 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+  </footer>
 
-    <script async src="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.js"></script>
-    <div hidden id="snipcart" data-api-key="NDdkMmZjYjAtYTI2NS00NDQ0LWFjYjgtMWNlMmVhNzgzZTMzNjM5MjQwNDE5ODk1NTAxNjE2"></div>
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
 
-    <script src="taal.js"></script>
+  <script>
+    const slug = new URLSearchParams(location.search).get('product');
 
-    <script>
-        const STOCK_API =
-            'https://licht-en-liefde-api.timdekruyf07.workers.dev';
+    let product = null;
+    let productFailed = false;
+    let stockState = 'loading';
+    let availableStock = null;
 
-        const productSlug =
-            new URLSearchParams(location.search).get('product');
+    function renderStock() {
+      const message = document.getElementById('stock-message');
+      const button = document.getElementById('add-to-cart');
 
-        const validProductSlug =
-            Boolean(productSlug && /^[a-zA-Z0-9_-]+$/.test(productSlug));
+      if (!message || !button) return;
 
-        let productData = null;
-        let productLoadFailed = false;
-        let stockState = 'loading';
-        let availableStock = null;
+      message.className = 'stock-message';
+      button.disabled = true;
+      button.textContent = window.siteLanguage.text('add');
 
-        function isEnglish() {
-            return window.siteLanguage.get() === 'en';
-        }
+      if (stockState === 'loading') {
+        message.classList.add('stock-neutral');
+        message.textContent = Shop.text(
+          'Voorraad wordt opgehaald...',
+          'Checking stock...'
+        );
+        return;
+      }
 
-        function updateStockDisplay() {
-            const message = document.getElementById('stock-message');
-            const button = document.getElementById('add-to-cart');
+      if (stockState === 'missing') {
+        message.classList.add('stock-neutral');
+        message.textContent = Shop.text(
+          'Voor dit product moet de voorraad nog worden ingesteld.',
+          'Stock has not yet been configured for this product.'
+        );
+        return;
+      }
 
-            if (!message || !button) return;
+      if (stockState === 'error') {
+        message.classList.add('stock-neutral');
+        message.textContent = Shop.text(
+          'De voorraad is tijdelijk niet beschikbaar. Ververs de pagina om het opnieuw te proberen.',
+          'Stock information is temporarily unavailable. Refresh the page to try again.'
+        );
+        return;
+      }
 
-            const en = isEnglish();
-            message.className = 'stock-message';
+      if (availableStock === 0) {
+        message.classList.add('sold-out');
+        message.textContent = Shop.text(
+          'Dit product is momenteel uitverkocht.',
+          'This product is currently sold out.'
+        );
 
-            // De bestaande winkelmand blijft beschikbaar voor producten
-            // waarvoor de voorraad nog niet is ingesteld.
-            button.disabled = false;
-            button.textContent = window.siteLanguage.text('add');
-            button.removeAttribute('data-item-max-quantity');
+        button.textContent = Shop.text('Uitverkocht', 'Sold out');
+        return;
+      }
 
-            if (stockState === 'loading') {
-                message.classList.add('stock-neutral');
-                message.textContent = en
-                    ? 'Checking stock...'
-                    : 'Voorraad wordt opgehaald...';
-                button.disabled = true;
-                return;
-            }
+      button.disabled = false;
 
-            if (stockState === 'missing') {
-                message.classList.add('stock-neutral');
-                message.textContent = en
-                    ? 'Stock information is not yet available for this product.'
-                    : 'Voor dit product is nog geen voorraadinformatie beschikbaar.';
-                return;
-            }
+      message.textContent = availableStock === 1
+        ? Shop.text(
+            'Let op: er is nog maar 1 van dit product over!',
+            'Please note: only 1 left in stock!'
+          )
+        : Shop.text(
+            `Let op: er zijn nog ${availableStock} van dit product over!`,
+            `Please note: only ${availableStock} left in stock!`
+          );
+    }
 
-            if (stockState === 'error') {
-                message.classList.add('stock-neutral');
-                message.textContent = en
-                    ? 'Stock information is temporarily unavailable.'
-                    : 'De voorraadinformatie is tijdelijk niet beschikbaar.';
-                return;
-            }
+    function renderProduct() {
+      const container = document.getElementById('product-detail');
+      container.replaceChildren();
 
-            if (availableStock === 0) {
-                message.classList.add('sold-out');
-                message.textContent = en
-                    ? 'This product is currently sold out.'
-                    : 'Dit product is momenteel uitverkocht.';
-                button.disabled = true;
-                button.textContent = en ? 'Sold out' : 'Uitverkocht';
-                return;
-            }
-
-            button.setAttribute(
-                'data-item-max-quantity',
-                String(availableStock)
+      if (!product) {
+        container.textContent = productFailed
+          ? window.siteLanguage.text('notFound')
+          : Shop.text(
+              'Product wordt geladen...',
+              'Loading product...'
             );
+        return;
+      }
 
-            if (availableStock === 1) {
-                message.textContent = en
-                    ? 'Please note: only 1 left in stock!'
-                    : 'Let op: er is nog maar 1 van dit product over!';
-            } else {
-                message.textContent = en
-                    ? `Please note: only ${availableStock} left in stock!`
-                    : `Let op: er zijn nog ${availableStock} van dit product over!`;
-            }
-        }
+      const layout = Shop.element('div', 'product-layout');
+      const imageUrl = Shop.imageUrl(product.image);
 
-        function renderProduct() {
-            if (!productData) return;
+      if (imageUrl) {
+        const image = Shop.element('img', 'product-photo');
+        image.src = imageUrl;
+        image.alt = Shop.title(product);
+        layout.append(image);
+      }
 
-            const en = isEnglish();
+      const info = Shop.element('div', 'product-info');
 
-            const title = en && productData.title_en
-                ? productData.title_en
-                : productData.title;
+      const heading = Shop.element('h2', '', Shop.title(product));
 
-            const description = en && productData.long_description_en
-                ? productData.long_description_en
-                : (!en && productData.long_description
-                    ? productData.long_description
-                    : (en && productData.description_en
-                        ? productData.description_en
-                        : productData.description || ''));
+      const price = Shop.element(
+        'p',
+        'product-price',
+        Shop.money(product.cents)
+      );
 
-            const container = document.getElementById('product-detail');
-            container.replaceChildren();
+      const description = Shop.element(
+        'p',
+        'product-description',
+        Shop.description(product, true)
+      );
 
-            const layout = document.createElement('div');
-            layout.className = 'product-layout';
+      const stock = Shop.element('p', 'stock-message');
+      stock.id = 'stock-message';
+      stock.setAttribute('role', 'status');
 
-            const image = document.createElement('img');
-            image.className = 'product-photo';
-            image.src = productData.image
-                ? productData.image.replace(/^\//, '')
-                : '';
-            image.alt = title;
+      const button = Shop.element(
+        'button',
+        'shop-button',
+        window.siteLanguage.text('add')
+      );
 
-            const info = document.createElement('div');
-            info.className = 'product-info';
+      button.id = 'add-to-cart';
+      button.type = 'button';
+      button.disabled = true;
 
-            const heading = document.createElement('h2');
-            heading.textContent = title;
+      button.addEventListener('click', async () => {
+        await Shop.add(product, button);
+        await loadStock();
+      });
 
-            const price = document.createElement('p');
-            price.className = 'product-price';
-            price.textContent = `€ ${Number(productData.price).toFixed(2)}`;
+      info.append(heading, price, description, stock, button);
+      layout.append(info);
+      container.append(layout);
 
-            const text = document.createElement('p');
-            text.className = 'product-description';
-            text.textContent = description;
+      document.title = `${Shop.title(product)} - Licht & Liefde`;
+      renderStock();
+    }
 
-            const stockMessage = document.createElement('p');
-            stockMessage.id = 'stock-message';
-            stockMessage.className = 'stock-message';
-            stockMessage.setAttribute('role', 'status');
+    async function loadStock() {
+      stockState = 'loading';
+      renderStock();
 
-            const button = document.createElement('button');
-            button.id = 'add-to-cart';
-            button.type = 'button';
-            button.className = 'snipcart-add-item';
-            button.textContent = window.siteLanguage.text('add');
-            button.setAttribute('data-item-id', productSlug);
-            button.setAttribute('data-item-price', productData.price);
-            button.setAttribute('data-item-url', 'producten.html');
-            button.setAttribute('data-item-name', title);
+      try {
+        availableStock = await Shop.getStock(slug);
+        stockState = 'ready';
+      } catch (error) {
+        availableStock = null;
+        stockState = error.status === 404 ? 'missing' : 'error';
+      } finally {
+        renderStock();
+      }
+    }
 
-            if (productData.image) {
-                button.setAttribute('data-item-image', productData.image);
-            }
+    async function loadProduct() {
+      if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+        productFailed = true;
+        renderProduct();
+        return;
+      }
 
-            info.append(heading, price, text, stockMessage, button);
+      try {
+        product = await Shop.getProduct(slug);
+        renderProduct();
+        await loadStock();
+      } catch (error) {
+        productFailed = true;
+        renderProduct();
+      }
+    }
 
-            if (productData.image) {
-                layout.append(image);
-            }
+    window.addEventListener('site-language-change', renderProduct);
 
-            layout.append(info);
-            container.append(layout);
-
-            document.title = `${title} - Licht & Liefde`;
-            updateStockDisplay();
-        }
-
-        async function loadStock() {
-            if (!validProductSlug) return;
-
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 8000);
-
-            try {
-                const response = await fetch(
-                    `${STOCK_API}/stock?product=${encodeURIComponent(productSlug)}`,
-                    {
-                        cache: 'no-store',
-                        signal: controller.signal
-                    }
-                );
-
-                if (response.status === 404) {
-                    stockState = 'missing';
-                    availableStock = null;
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Voorraad ophalen mislukt');
-                }
-
-                const data = await response.json();
-
-                if (
-                    data.product_id !== productSlug ||
-                    !Number.isSafeInteger(data.available) ||
-                    data.available < 0
-                ) {
-                    throw new Error('Ongeldige voorraadinformatie');
-                }
-
-                availableStock = data.available;
-                stockState = 'ready';
-            } catch (error) {
-                availableStock = null;
-                stockState = 'error';
-                console.error('Voorraad ophalen mislukt:', error);
-            } finally {
-                clearTimeout(timeout);
-                updateStockDisplay();
-            }
-        }
-
-        async function loadProduct() {
-            const container = document.getElementById('product-detail');
-
-            if (!validProductSlug) {
-                productLoadFailed = true;
-                container.textContent = window.siteLanguage.text('notFound');
-                return;
-            }
-
-            try {
-                const url = `https://api.github.com/repos/timdekruyf07-dotcom/website-kaars/contents/content/producten/${encodeURIComponent(productSlug)}.md`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    throw new Error('Product niet gevonden');
-                }
-
-                const file = await response.json();
-                const fileResponse = await fetch(file.download_url);
-
-                if (!fileResponse.ok) {
-                    throw new Error('Productbestand niet gevonden');
-                }
-
-                const content = await fileResponse.text();
-                const parts = content.split('---');
-
-                if (parts.length < 3) {
-                    throw new Error('Ongeldig productbestand');
-                }
-
-                const parsedProduct = jsyaml.load(parts[1]);
-
-                if (
-                    !parsedProduct ||
-                    !parsedProduct.title ||
-                    !Number.isFinite(Number(parsedProduct.price))
-                ) {
-                    throw new Error('Ongeldig product');
-                }
-
-                productData = parsedProduct;
-                renderProduct();
-            } catch (error) {
-                productLoadFailed = true;
-                container.textContent = window.siteLanguage.text('notFound');
-            }
-        }
-
-        loadProduct();
-        loadStock();
-
-        window.addEventListener('site-language-change', () => {
-            if (productData) {
-                renderProduct();
-            } else if (productLoadFailed) {
-                document.getElementById('product-detail').textContent =
-                    window.siteLanguage.text('notFound');
-            } else {
-                document.getElementById('product-detail').textContent =
-                    isEnglish()
-                        ? 'Loading product...'
-                        : 'Product wordt geladen...';
-            }
-        });
-    </script>
+    loadProduct();
+  </script>
 </body>
 </html>
