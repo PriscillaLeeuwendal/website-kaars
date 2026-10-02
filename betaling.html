@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Betaling - Licht & Liefde</title>
+
+  <style>
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      background: #fcfbfa;
+      color: #4a4543;
+      font: 16px/1.6 Georgia, serif;
+    }
+
+    header {
+      padding: 35px 20px;
+      background: #8c7b70;
+      color: white;
+      text-align: center;
+    }
+
+    h1 { margin: 0; }
+
+    main {
+      max-width: 650px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .box {
+      padding: 25px;
+      background: white;
+      border: 1px solid #e8e1da;
+      border-radius: 8px;
+    }
+
+    a { color: #736359; }
+
+    button,
+    .button {
+      display: inline-block;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 4px;
+      background: #8c7b70;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      margin: 5px 5px 5px 0;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .note {
+      font-size: .9em;
+      color: #7a706b;
+    }
+
+    #status {
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      padding: 25px;
+      text-align: center;
+      background: #f4efe9;
+      color: #7a706b;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1 id="heading">Betaling controleren</h1>
+  </header>
+
+  <main>
+    <section class="box">
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <p id="order-number" class="note"></p>
+
+      <button id="check" type="button"></button>
+
+      <a id="resume" class="button" hidden></a>
+
+      <p>
+        <a href="producten.html" id="back"></a>
+      </p>
+
+      <p class="note" id="test-note"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+  </footer>
+
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
+
+  <script>
+    const ATTEMPT_KEY = 'licht-en-liefde-checkout-v1';
+
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get('order');
+    const key = params.get('key');
+
+    const valid =
+      /^[a-f0-9-]{36}$/.test(orderId || '') &&
+      /^[a-f0-9]{64}$/.test(key || '');
+
+    const button = document.getElementById('check');
+    const resume = document.getElementById('resume');
+
+    let data = null;
+    let busy = false;
+    let failed = false;
+    let cartFailed = false;
+    let polls = 0;
+    let timer = null;
+
+    function render() {
+      const paid = data?.status === 'paid';
+
+      document.title = Shop.text(
+        'Betaling - Licht & Liefde',
+        'Payment - Licht & Liefde'
+      );
+
+      document.getElementById('heading').textContent =
+        paid
+          ? Shop.text(
+              'Testbetaling geslaagd',
+              'Test payment successful'
+            )
+          : Shop.text(
+              'Betaling controleren',
+              'Checking payment'
+            );
+
+      document.getElementById('back').textContent =
+        Shop.text(
+          '← Terug naar producten',
+          '← Back to products'
+        );
+
+      document.getElementById('test-note').textContent =
+        Shop.text(
+          'Dit is een testbetaling. Er is geen echt geld afgeschreven. Een geslaagde testbetaling werkt de ingestelde voorraad wel bij.',
+          'This is a test payment. No real money has been charged. A successful test payment does update the configured stock.'
+        );
+
+      document.getElementById('order-number').textContent =
+        valid
+          ? `${Shop.text('Bestelnummer', 'Order number')}: ${orderId}`
+          : '';
+
+      button.textContent = busy
+        ? Shop.text('Even controleren...', 'Checking...')
+        : Shop.text('Opnieuw controleren', 'Check again');
+
+      button.disabled = busy || !valid;
+      button.hidden = paid && !cartFailed;
+      resume.hidden = true;
+
+      let message;
+
+      if (!valid) {
+        message = Shop.text(
+          'Deze bestellink is ongeldig.',
+          'This order link is invalid.'
+        );
+      } else if (failed) {
+        message = Shop.text(
+          'De betaling kon nog niet worden gecontroleerd. Klik op opnieuw controleren; begin niet direct een nieuwe betaling.',
+          'The payment could not be checked. Check again before starting another payment.'
+        );
+      } else if (paid) {
+        message = Shop.text(
+          'Je testbetaling is geslaagd en de voorraad is bijgewerkt.',
+          'Your test payment succeeded and stock has been updated.'
+        );
+      } else if (
+        ['canceled', 'expired', 'failed'].includes(data?.status)
+      ) {
+        message = Shop.text(
+          'Deze betaling is geannuleerd, verlopen of mislukt. Er is geen geslaagde betaling geregistreerd. De gereserveerde voorraad is vrijgegeven.',
+          'This payment was canceled, expired or failed. No successful payment was recorded. Reserved stock has been released.'
+        );
+      } else if (data?.status === 'review') {
+        message = Shop.text(
+          'Deze bestelling moet worden gecontroleerd. Begin hiervoor geen nieuwe betaling.',
+          'This order needs to be checked. Do not start another payment for it.'
+        );
+      } else {
+        message = Shop.text(
+          'Er is nog geen geslaagde betaling bevestigd. We controleren de status opnieuw.',
+          'A successful payment has not yet been confirmed. We will check the status again.'
+        );
+      }
+
+      if (cartFailed) {
+        message += '\n' + Shop.text(
+          'Je winkelmand kon nog niet worden bijgewerkt. Klik op opnieuw controleren.',
+          'Your cart could not be updated. Click check again.'
+        );
+      }
+
+      document.getElementById('status').textContent = message;
+
+      if (
+        data?.status === 'pending' &&
+        data.checkout_url
+      ) {
+        try {
+          const url = new URL(data.checkout_url);
+
+          if (
+            url.protocol === 'https:' &&
+            (
+              url.hostname === 'mollie.com' ||
+              url.hostname.endsWith('.mollie.com')
+            )
+          ) {
+            resume.href = url.href;
+            resume.textContent = Shop.text(
+              'Terug naar deze betaling',
+              'Return to this payment'
+            );
+            resume.hidden = false;
+          }
+        } catch (_) {}
+      }
+    }
+
+    async function updateCart() {
+      let attempt;
+
+      try {
+        attempt = JSON.parse(
+          sessionStorage.getItem(ATTEMPT_KEY) || 'null'
+        );
+      } catch (_) {
+        return;
+      }
+
+      if (
+        !attempt ||
+        attempt.checkout_key !== key ||
+        !Array.isArray(attempt.items)
+      ) {
+        return;
+      }
+
+      if (
+        attempt.order_id &&
+        attempt.order_id !== orderId
+      ) {
+        return;
+      }
+
+      if (data.status === 'paid') {
+        await Shop.completeOrder(orderId, attempt.items);
+      }
+
+      if (
+        ['paid', 'canceled', 'expired', 'failed'].includes(data.status)
+      ) {
+        sessionStorage.removeItem(ATTEMPT_KEY);
+      }
+    }
+
+    async function check() {
+      if (busy || !valid) return;
+
+      clearTimeout(timer);
+      busy = true;
+      failed = false;
+      cartFailed = false;
+      render();
+
+      try {
+        const response = await fetch(
+          Shop.API +
+          '/order?order=' +
+          encodeURIComponent(orderId) +
+          '&key=' +
+          key,
+          {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(20000)
+          }
+        );
+
+        const result = await response.json();
+
+        if (
+          !response.ok ||
+          result.order_id !== orderId ||
+          result.mode !== 'test'
+        ) {
+          throw new Error('Controle mislukt');
+        }
+
+        data = result;
+
+        try {
+          await updateCart();
+        } catch (_) {
+          cartFailed = true;
+        }
+
+        if (
+          ['pending', 'creating'].includes(data.status) &&
+          polls < 8
+        ) {
+          polls++;
+          timer = setTimeout(check, 5000);
+        }
+      } catch (_) {
+        failed = true;
+      } finally {
+        busy = false;
+        render();
+      }
+    }
+
+    button.addEventListener('click', () => {
+      polls = 0;
+      check();
+    });
+
+    window.addEventListener('site-language-change', render);
+
+    window.addEventListener('pagehide', () => {
+      clearTimeout(timer);
+    });
+
+    render();
+    check();
+  </script>
+</body>
+</html>
