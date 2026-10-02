@@ -112,6 +112,28 @@ jobs:
 
                   product[field] = value
 
+              extra_images = data.get('extra_images') or []
+
+              if not isinstance(extra_images, list):
+                  raise ValueError(
+                      f'Extra foto’s moeten een lijst zijn: {file.name}'
+                  )
+
+              clean_images = []
+
+              for image in extra_images:
+                  if not isinstance(image, str):
+                      raise ValueError(
+                          f'Ongeldige extra foto: {file.name}'
+                      )
+
+                  image = image.strip()
+
+                  if image and image not in clean_images:
+                      clean_images.append(image)
+
+              product['extra_images'] = clean_images
+
               if not product['title'].strip():
                   raise ValueError(
                       f'Producttitel ontbreekt: {file.name}'
