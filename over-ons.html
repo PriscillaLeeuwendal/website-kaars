@@ -1,180 +1,51 @@
-<!DOCTYPE html>
-<html lang="nl">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Over Ons - Licht & Liefde</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-
-    <style>
-        @font-face {
-            font-family: 'Marseille';
-            src: url('fonts/Marseille.ttf') format('truetype');
-        }
-
-        body {
-            font-family: Georgia, serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fcfbfa;
-            color: #4a4543;
-            line-height: 1.6;
-        }
-
-        header {
-            background-image:
-                linear-gradient(
-                    rgba(0, 0, 0, 0.35),
-                    rgba(0, 0, 0, 0.35)
-                ),
-                url('images/hero-banner.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 80px 20px 40px;
-            text-align: center;
-            position: relative;
-            color: #ffffff;
-            border-bottom: 1px solid #e8e1da;
-        }
-
-        .cart-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: #8c7b70;
-            color: white;
-            padding: 8px 14px;
-            font-family: sans-serif;
-            font-size: 0.85em;
-            text-decoration: none;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .cart-link:hover {
-            background-color: #736359;
-        }
-
-        header h1 {
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-
-        .main-nav {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .main-nav a {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 18px;
-            text-decoration: none;
-            border-radius: 20px;
-            font-family: sans-serif;
-            font-size: 0.9em;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        .main-nav a:hover,
-        .main-nav a.active {
-            background-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        h2 {
-            font-family: 'Marseille', Georgia, serif;
-            font-size: 2.2em;
-            color: #3b3533;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .cart-panel h2 {
-            font-family: Georgia, serif;
-            font-size: 1.5em;
-            text-align: left;
-        }
-
-        .shop-button {
-            background-color: #8c7b70;
-            color: white;
-            padding: 12px 22px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font: 0.95em sans-serif;
-        }
-
-        .shop-button:hover {
-            background-color: #736359;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px;
-            background-color: #f4efe9;
-            color: #7a706b;
-            font-size: 0.9em;
-            border-top: 1px solid #e8e1da;
-            margin-top: 50px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About Us - Diatheke Atelier</title>
+  <link rel="stylesheet" href="stijl.css">
 </head>
 
 <body>
-    <header>
-        <a href="#winkelmand" class="cart-link" data-open-cart>
-            Winkelmand (<span data-cart-count>0</span>)
-        </a>
+  <header class="page-banner">
+    <h1>About Us</h1>
+  </header>
 
-        <h1>Over Ons</h1>
+  <main class="container narrow">
+    <img
+      class="story-photo"
+      src="images/diatheke-hero.png"
+      alt=""
+      width="1931"
+      height="814"
+    >
 
-        <nav class="main-nav">
-            <a href="index.html">Home</a>
-            <a href="producten.html">Producten</a>
-            <a href="over-ons.html" class="active">Over ons</a>
-            <a href="contact.html">Contact</a>
-        </nav>
-    </header>
+    <h2>The story behind Diatheke Atelier</h2>
 
-    <main class="container">
-        <h2>Het verhaal achter Licht & Liefde</h2>
+    <div class="story-copy">
+      <p>
+        Welcome to <strong>Diatheke Atelier</strong>!
+        We believe a candle can bring more than a cosy atmosphere:
+        it can also bring warmth and hope into your home.
+      </p>
 
-        <p>
-            Welkom bij <strong>Licht & Liefde</strong>!
-            Wij geloven dat een brandende kaars niet alleen
-            gezelligheid brengt, maar ook warmte en hoop in
-            huis kan verspreiden.
-        </p>
+      <p>
+        Our candles are handmade and feature carefully selected
+        Christian messages and encouraging quotes. Whether you
+        are looking for a meaningful gift or a peaceful moment
+        for yourself, every candle is made with love, especially
+        for you.
+      </p>
+    </div>
+  </main>
 
-        <p>
-            Onze kaarsen worden met de hand gemaakt en voorzien
-            van zorgvuldig geselecteerde christelijke teksten
-            en bemoedigende quotes. Of je nu op zoek bent naar
-            een dierbaar cadeau voor iemand die het nodig heeft,
-            of gewoon een sfeervol moment voor jezelf wilt
-            creëren: elk exemplaar wordt met liefde gemaakt,
-            speciaal voor jou.
-        </p>
-    </main>
+  <footer>
+    <p>© 2026 Diatheke Atelier — Made with care.</p>
+  </footer>
 
-    <footer>
-        <p>&copy; 2026 Licht & Liefde - Handgemaakt met zorg.</p>
-    </footer>
-
-    <script src="taal.js"></script>
-    <script src="winkelmand.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
 </body>
 </html>
