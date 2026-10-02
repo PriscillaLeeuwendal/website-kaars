@@ -1,0 +1,188 @@
+name: Website publiceren
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Bestanden ophalen
+        uses: actions/checkout@v6
+
+      - name: GitHub Pages voorbereiden
+        uses: actions/configure-pages@v5
+
+      - name: YAML-lezer installeren
+        run: python3 -m pip install 'PyYAML==6.0.2'
+
+      - name: Website en productenlijst maken
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          import shutil
+          from decimal import Decimal, InvalidOperation
+          from pathlib import Path
+          import yaml
+
+          root = Path('.')
+          output = root / '_site'
+
+          if output.exists():
+              shutil.rmtree(output)
+
+          shutil.copytree(
+              root,
+              output,
+              ignore=shutil.ignore_patterns(
+                  '.git',
+                  '.github',
+                  '_site',
+                  'node_modules',
+                  '__pycache__'
+              )
+          )
+
+          folder = root / 'content' / 'producten'
+
+          if not folder.is_dir():
+              raise ValueError('De map content/producten ontbreekt.')
+
+          products = []
+
+          fields = (
+              'title',
+              'title_en',
+              'description',
+              'description_en',
+              'long_description',
+              'long_description_en',
+              'image'
+          )
+
+          for file in sorted(folder.glob('*.md')):
+              product_id = file.stem
+
+              if not re.fullmatch(r'[a-zA-Z0-9_-]+', product_id):
+                  raise ValueError(
+                      f'Ongeldige productnaam: {file.name}'
+                  )
+
+              source = file.read_text(encoding='utf-8-sig')
+
+              match = re.match(
+                  r'^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)',
+                  source
+              )
+
+              if not match:
+                  raise ValueError(
+                      f'Ongeldig productbestand: {file.name}'
+                  )
+
+              data = yaml.safe_load(match.group(1))
+
+              if not isinstance(data, dict):
+                  raise ValueError(
+                      f'Ongeldige productgegevens: {file.name}'
+                  )
+
+              product = {'id': product_id}
+
+              for field in fields:
+                  value = data.get(field) or ''
+
+                  if not isinstance(value, str):
+                      raise ValueError(
+                          f'Ongeldige tekst in {file.name}: {field}'
+                      )
+
+                  product[field] = value
+
+              if not product['title'].strip():
+                  raise ValueError(
+                      f'Producttitel ontbreekt: {file.name}'
+                  )
+
+              raw_price = data.get('price')
+
+              if (
+                  isinstance(raw_price, bool)
+                  or not isinstance(raw_price, (int, float))
+              ):
+                  raise ValueError(
+                      f'Prijs moet een getal zijn: {file.name}'
+                  )
+
+              try:
+                  price = Decimal(str(raw_price))
+
+                  if (
+                      not price.is_finite()
+                      or price < 0
+                      or price > 10000
+                  ):
+                      raise ValueError(
+                          f'Ongeldige prijs: {file.name}'
+                      )
+
+                  cents = price * 100
+
+                  if cents != cents.to_integral_value():
+                      raise ValueError(
+                          f'Prijs mag maximaal twee decimalen hebben: {file.name}'
+                      )
+
+              except InvalidOperation:
+                  raise ValueError(
+                      f'Ongeldige prijs: {file.name}'
+                  )
+
+              product['price'] = float(price)
+              product['cents'] = int(cents)
+
+              products.append(product)
+
+          (output / 'producten.json').write_text(
+              json.dumps(
+                  products,
+                  ensure_ascii=False,
+                  allow_nan=False,
+                  indent=2
+              ),
+              encoding='utf-8'
+          )
+
+          print(f'Website klaar met {len(products)} producten.')
+          PY
+
+      - name: Website uploaden
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Website publiceren
+        id: deployment
+        uses: actions/deploy-pages@v4
