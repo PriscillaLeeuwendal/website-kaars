@@ -4,11 +4,15 @@
   const API =
     'https://licht-en-liefde-api.timdekruyf07.workers.dev';
 
-  const REPO =
-    'https://api.github.com/repos/timdekruyf07-dotcom/website-kaars';
+  const CATALOG_URL = new URL(
+    'producten.json',
+    document.currentScript?.src || location.href
+  ).href;
 
   const KEY = 'licht-en-liefde-winkelmand-v1';
 
+  let catalogTime = 0;
+  let catalogRequest = null;
   let panel = null;
   let previousFocus = null;
   let refreshing = false;
@@ -28,34 +32,23 @@
 
   function element(tag, className, content) {
     const node = document.createElement(tag);
-
     if (className) node.className = className;
     if (content !== undefined) node.textContent = content;
-
     return node;
   }
 
   function money(cents) {
     return new Intl.NumberFormat(
       window.siteLanguage?.get() === 'en' ? 'en-IE' : 'nl-NL',
-      {
-        style: 'currency',
-        currency: 'EUR'
-      }
+      { style: 'currency', currency: 'EUR' }
     ).format(cents / 100);
   }
 
   function readState() {
-    const state = {
-      items: {},
-      completed: []
-    };
+    const state = { items: {}, completed: [] };
 
     try {
-      const raw = JSON.parse(
-        localStorage.getItem(KEY) || '{}'
-      );
-
+      const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
       const items = raw?.format === 2 ? raw.items : raw;
 
       if (
@@ -75,10 +68,7 @@
         }
       }
 
-      if (
-        raw?.format === 2 &&
-        Array.isArray(raw.completed)
-      ) {
+      if (raw?.format === 2 && Array.isArray(raw.completed)) {
         state.completed = raw.completed.filter(id => {
           return typeof id === 'string';
         });
@@ -94,10 +84,7 @@
     try {
       localStorage.setItem(
         KEY,
-        JSON.stringify({
-          format: 2,
-          ...state
-        })
+        JSON.stringify({ format: 2, ...state })
       );
     } catch (_) {
       throw new Error(text(
@@ -128,9 +115,7 @@
         product_id,
         quantity
       }))
-      .sort((a, b) => {
-        return a.product_id.localeCompare(b.product_id);
-      });
+      .sort((a, b) => a.product_id.localeCompare(b.product_id));
   }
 
   async function completeOrder(orderId, items) {
@@ -149,8 +134,7 @@
         }
 
         const remaining =
-          (state.items[item.product_id] || 0) -
-          item.quantity;
+          (state.items[item.product_id] || 0) - item.quantity;
 
         if (remaining > 0) {
           state.items[item.product_id] = remaining;
@@ -190,97 +174,82 @@
       : response.json();
   }
 
-  function parseProduct(id, content) {
-    const match = content.match(
-      /^\uFEFF?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/
-    );
-
-    if (!match) throw new Error('Ongeldig productbestand');
-
-    const data = jsyaml.load(match[1]);
-    const price = data?.price;
+  async function loadCatalog(fresh = false) {
+    if (catalogRequest) return catalogRequest;
 
     if (
-      !data ||
-      typeof data.title !== 'string' ||
-      !data.title.trim() ||
-      typeof price !== 'number' ||
-      !Number.isFinite(price) ||
-      price < 0
+      !fresh &&
+      catalogTime &&
+      Date.now() - catalogTime < 60000
     ) {
-      throw new Error('Ongeldig product');
+      return [...products.values()];
     }
 
-    const cents = Math.round(price * 100);
+    catalogRequest = (async () => {
+      const data = await request(CATALOG_URL);
 
-    if (
-      !Number.isSafeInteger(cents) ||
-      Math.abs(price * 100 - cents) > 0.000001
-    ) {
-      throw new Error('Ongeldige prijs');
+      if (!Array.isArray(data)) {
+        throw new Error('Ongeldige productenlijst');
+      }
+
+      const next = new Map();
+
+      for (const product of data) {
+        if (
+          !product ||
+          !validId(product.id) ||
+          next.has(product.id) ||
+          typeof product.title !== 'string' ||
+          !product.title.trim() ||
+          typeof product.price !== 'number' ||
+          !Number.isFinite(product.price) ||
+          product.price < 0 ||
+          !Number.isSafeInteger(product.cents) ||
+          product.cents < 0 ||
+          Math.abs(product.price * 100 - product.cents) > 0.000001
+        ) {
+          throw new Error('Ongeldige productgegevens');
+        }
+
+        next.set(product.id, product);
+      }
+
+      products.clear();
+
+      for (const [id, product] of next) {
+        products.set(id, product);
+      }
+
+      catalogTime = Date.now();
+
+      return [...products.values()];
+    })();
+
+    try {
+      return await catalogRequest;
+    } finally {
+      catalogRequest = null;
     }
-
-    const product = {
-      ...data,
-      id,
-      cents
-    };
-
-    products.set(id, product);
-    return product;
   }
 
   async function getProduct(id, fresh = false) {
     if (!validId(id)) throw new Error('Ongeldig product');
 
-    if (!fresh && products.has(id)) {
-      return products.get(id);
+    await loadCatalog(fresh);
+
+    const product = products.get(id);
+
+    if (!product) {
+      const error = new Error('Product niet gevonden');
+      error.status = 404;
+      throw error;
     }
 
-    const file = await request(
-      `${REPO}/contents/content/producten/${encodeURIComponent(id)}.md?ref=main`
-    );
-
-    if (!file.download_url) {
-      throw new Error('Productbestand ontbreekt');
-    }
-
-    return parseProduct(
-      id,
-      await request(file.download_url, 'text')
-    );
+    return product;
   }
 
   async function listProducts() {
-    const files = await request(
-      `${REPO}/contents/content/producten?ref=main`
-    );
-
-    if (!Array.isArray(files)) {
-      throw new Error('Productenmap ontbreekt');
-    }
-
-    return Promise.all(
-      files
-        .filter(file => {
-          return (
-            file.type === 'file' &&
-            file.name.endsWith('.md')
-          );
-        })
-        .map(async file => {
-          const id = file.name.slice(0, -3);
-
-          if (!validId(id) || !file.download_url) {
-            throw new Error('Ongeldig productbestand');
-          }
-
-          return parseProduct(
-            id,
-            await request(file.download_url, 'text')
-          );
-        })
-    );
+    return loadCatalog(true);
   }
 
   async function getStock(id) {
@@ -303,9 +272,7 @@
     return (
       window.siteLanguage?.get() === 'en' &&
       product.title_en
-    )
-      ? product.title_en
-      : product.title;
+    ) ? product.title_en : product.title;
   }
 
   function description(product, long = false) {
@@ -325,9 +292,7 @@
   }
 
   function imageUrl(value) {
-    if (typeof value !== 'string' || !value.trim()) {
-      return '';
-    }
+    if (typeof value !== 'string' || !value.trim()) return '';
 
     const path = value.trim();
 
@@ -347,12 +312,8 @@
 
   async function add(product, button) {
     const label = button.textContent;
-
     button.disabled = true;
-    button.textContent = text(
-      'Even controleren...',
-      'Checking...'
-    );
+    button.textContent = text('Even controleren...', 'Checking...');
 
     try {
       const available = await getStock(product.id);
@@ -394,7 +355,6 @@
 
     panel.remove();
     panel = null;
-
     document.body.style.overflow = '';
     previousFocus?.focus();
   }
@@ -408,13 +368,10 @@
     const ids = Object.keys(state.items);
 
     if (!ids.length) {
-      content.append( element(
+      content.append(element(
         'p',
         '',
-        text(
-          'Je winkelmand is nog leeg.',
-          'Your cart is empty.'
-        )
+        text('Je winkelmand is nog leeg.', 'Your cart is empty.')
       ));
       return;
     }
@@ -429,9 +386,7 @@
 
       if (product) {
         const link = element('a', '', title(product));
-
-        link.href =
-          `product.html?product=${encodeURIComponent(id)}`;
+        link.href = `product.html?product=${encodeURIComponent(id)}`;
 
         info.append(
           link,
@@ -441,7 +396,6 @@
         subtotal += product.cents * state.items[id];
       } else {
         complete = false;
-
         info.append(element(
           'p',
           '',
@@ -454,11 +408,7 @@
 
       const controls = element('div', 'cart-controls');
       const minus = element('button', '', '−');
-      const number = element(
-        'span',
-        '',
-        String(state.items[id])
-      );
+      const number = element('span', '', String(state.items[id]));
       const plus = element('button', '', '+');
       const remove = element(
         'button',
@@ -491,11 +441,8 @@
 
       minus.addEventListener('click', () => {
         change(() => {
-          if (state.items[id] > 1) {
-            state.items[id]--;
-          } else {
-            delete state.items[id];
-          }
+          if (state.items[id] > 1) state.items[id]--;
+          else delete state.items[id];
         });
       });
 
@@ -512,21 +459,17 @@
 
         try {
           const available = await getStock(id);
-
           state = readState();
 
           if (
-            (state.items[id] || 0) >=
-            Math.min(available, 1000)
+            (state.items[id] || 0) >= Math.min(available, 1000)
           ) {
             alert(text(
               'Er is geen extra voorraad beschikbaar.',
               'No additional stock is available.'
             ));
           } else {
-            state.items[id] =
-              (state.items[id] || 0) + 1;
-
+            state.items[id] = (state.items[id] || 0) + 1;
             persist();
           }
         } catch (_) {
@@ -618,26 +561,15 @@
 
     state = readState();
     previousFocus = document.activeElement;
-
     panel = element('div', 'cart-overlay');
 
     const dialog = element('section', 'cart-panel');
-
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
-    dialog.setAttribute(
-      'aria-labelledby',
-      'shop-cart-title'
-    );
-
+    dialog.setAttribute('aria-labelledby', 'shop-cart-title');
     dialog.tabIndex = -1;
 
-    const heading = element(
-      'h2',
-      '',
-      text('Winkelmand', 'Cart')
-    );
-
+    const heading = element('h2', '', text('Winkelmand', 'Cart'));
     heading.id = 'shop-cart-title';
 
     const close = element(
@@ -652,11 +584,7 @@
     const top = element('div', 'cart-top');
     top.append(heading, close);
 
-    dialog.append(
-      top,
-      element('div', 'cart-content')
-    );
-
+    dialog.append(top, element('div', 'cart-content'));
     panel.append(dialog);
     document.body.append(panel);
     document.body.style.overflow = 'hidden';
@@ -675,9 +603,7 @@
       if (event.key !== 'Tab') return;
 
       const nodes = [
-        ...dialog.querySelectorAll(
-          'a[href], button:not(:disabled)'
-        )
+        ...dialog.querySelectorAll('a[href], button:not(:disabled)')
       ];
 
       if (!nodes.length) {
@@ -689,10 +615,7 @@
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
 
-      if (
-        event.shiftKey &&
-        document.activeElement === first
-      ) {
+      if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (
@@ -709,9 +632,7 @@
     close.focus();
 
     await Promise.allSettled(
-      Object.keys(state.items).map(id => {
-        return getProduct(id, true);
-      })
+      Object.keys(state.items).map(id => getProduct(id, true))
     );
 
     refreshing = false;
@@ -811,12 +732,7 @@
     }
 
     .cart-row-info { min-width: 0; }
-
-    .cart-row-info a {
-      color: #736359;
-      font-weight: bold;
-    }
-
+    .cart-row-info a { color: #736359; font-weight: bold; }
     .cart-row-info p { margin: 5px 0 0; }
 
     .cart-controls {
@@ -828,19 +744,10 @@
     }
 
     .cart-remove { font-size: .85em !important; }
-
     .cart-totals { padding: 20px 0; }
     .cart-totals p { margin: 5px 0; }
-
-    .cart-totals strong {
-      display: block;
-      margin-top: 12px;
-    }
-
-    .cart-note {
-      font-size: .9em;
-      color: #7a706b;
-    }
+    .cart-totals strong { display: block; margin-top: 12px; }
+    .cart-note { font-size: .9em; color: #7a706b; }
 
     .shop-button:disabled,
     .cart-controls button:disabled {
@@ -849,11 +756,7 @@
     }
 
     @media (max-width: 550px) {
-      .cart-row {
-        align-items: start;
-        flex-direction: column;
-      }
-
+      .cart-row { align-items: start; flex-direction: column; }
       .cart-controls { justify-content: flex-start; }
       .cart-panel { padding: 20px; }
     }
