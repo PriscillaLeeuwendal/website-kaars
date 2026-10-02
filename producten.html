@@ -3,26 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Products - Diatheke Atelier</title>
+  <title>Shop - Diatheke Atelier</title>
   <link rel="stylesheet" href="stijl.css">
 </head>
 
 <body>
   <header class="page-banner">
-    <h1>Our Products</h1>
+    <h1>Shop</h1>
   </header>
 
   <main class="container">
-    <div class="toolbar">
-      <button
-        type="button"
-        id="refresh-products-btn"
-        class="small-button"
-      >🔄 Refresh</button>
-
-      <a href="admin/" class="small-button" data-admin-link>Admin</a>
-    </div>
-
     <section class="section">
       <h2>Handmade Candles</h2>
 
@@ -51,8 +41,11 @@
 
       if (status !== 'ready') {
         const message = Shop.element(
-          'p', '', window.siteLanguage.text(status)
+          'p',
+          '',
+          window.siteLanguage.text(status)
         );
+
         message.dataset.status = status;
         container.append(message);
         return;
@@ -69,28 +62,41 @@
 
         if (imageUrl) {
           const image = Shop.element('img');
+
           image.src = imageUrl;
           image.alt = Shop.title(product);
           image.loading = 'lazy';
+
           link.append(image);
         }
 
-        link.append(Shop.element('h3', '', Shop.title(product)));
+        link.append(
+          Shop.element('h3', '', Shop.title(product))
+        );
 
         const description = Shop.element(
-          'p', '', Shop.description(product)
+          'p',
+          '',
+          Shop.description(product)
         );
 
         const price = Shop.element(
-          'p', 'product-price', Shop.money(product.cents)
+          'p',
+          'product-price',
+          Shop.money(product.cents)
         );
 
         const button = Shop.element(
-          'button', 'shop-button', window.siteLanguage.text('add')
+          'button',
+          'shop-button',
+          window.siteLanguage.text('add')
         );
 
         button.type = 'button';
-        button.addEventListener('click', () => Shop.add(product, button));
+
+        button.addEventListener('click', () => {
+          Shop.add(product, button);
+        });
 
         card.append(link, description, price, button);
         container.append(card);
@@ -104,9 +110,6 @@
       status = 'loading';
       renderProducts();
 
-      const refresh = document.getElementById('refresh-products-btn');
-      refresh.disabled = true;
-
       try {
         loadedProducts = await Shop.listProducts();
         status = loadedProducts.length ? 'ready' : 'empty';
@@ -115,15 +118,15 @@
         console.error('Producten laden mislukt:', error);
       } finally {
         loading = false;
-        refresh.disabled = false;
         renderProducts();
       }
     }
 
-    document.getElementById('refresh-products-btn')
-      .addEventListener('click', loadProducts);
+    window.addEventListener(
+      'site-language-change',
+      renderProducts
+    );
 
-    window.addEventListener('site-language-change', renderProducts);
     loadProducts();
   </script>
 </body>
