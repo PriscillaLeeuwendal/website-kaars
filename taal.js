@@ -8,7 +8,8 @@
     saved = null;
   }
 
-  let language = saved === 'en' ? 'en' : 'nl';
+  let language = saved === 'nl' ? 'nl' : 'en';
+  let dialogReturnFocus = null;
 
   const words = {
     nl: {
@@ -17,7 +18,7 @@
       products: 'Producten',
       about: 'Over ons',
       contact: 'Contact',
-      footer: '© 2026 Licht & Liefde - Handgemaakt met zorg.',
+      footer: '© 2026 Diatheke Atelier — Met zorg gemaakt.',
       loading: 'Producten worden geladen...',
       empty: 'Nog geen producten gevonden.',
       error: 'Kon de producten niet laden.',
@@ -33,7 +34,7 @@
       products: 'Products',
       about: 'About us',
       contact: 'Contact',
-      footer: '© 2026 Licht & Liefde - Handmade with care.',
+      footer: '© 2026 Diatheke Atelier — Made with care.',
       loading: 'Loading products...',
       empty: 'No products found yet.',
       error: 'Could not load the products.',
@@ -42,6 +43,57 @@
       detail: 'Product',
       back: '← Back to products',
       notFound: 'Product not found.'
+    }
+  };
+
+  const homeWords = {
+    en: {
+      eyebrowFirst: 'Sacred spaces',
+      eyebrowSecond: 'for everyday life.',
+      titleFirst: 'Illuminating',
+      titleSecond: 'His promises',
+      tagline: 'Covenant. Light. Presence.',
+      collection: 'Shop the collection',
+      valueOneTitle: 'Faith-Centered Design',
+      valueOneFirst: 'Refined home décor that illuminates',
+      valueOneSecond: 'His promises.',
+      valueTwoTitle: 'Timeless Craftsmanship',
+      valueTwoFirst: 'Natural materials. Lasting beauty.',
+      valueTwoSecond: 'Eternal meaning.',
+      valueThreeTitle: 'A More Sacred Home',
+      valueThreeFirst: 'Create spaces that draw you',
+      valueThreeSecond: 'closer to His presence.',
+      wallLights: 'Wall Lights',
+      candles: 'Candles & Vessels',
+      vases: 'Vases & Décor',
+      shopNow: 'Shop Now',
+      wallImage: 'Illuminated stone cross on a warm beige wall',
+      candleImage: 'Warmly glowing stone candle vessels',
+      vaseImage: 'Textured vase with olive branches'
+    },
+    nl: {
+      eyebrowFirst: 'Een plek voor geloof',
+      eyebrowSecond: 'in het dagelijks leven.',
+      titleFirst: 'Zijn beloften',
+      titleSecond: 'in het licht',
+      tagline: 'Verbond. Licht. Aanwezigheid.',
+      collection: 'Bekijk de collectie',
+      valueOneTitle: 'Ontwerp vanuit geloof',
+      valueOneFirst: 'Verfijnde woondecoratie die',
+      valueOneSecond: 'Zijn beloften laat stralen.',
+      valueTwoTitle: 'Tijdloos vakmanschap',
+      valueTwoFirst: 'Natuurlijke materialen. Blijvende schoonheid.',
+      valueTwoSecond: 'Eeuwige betekenis.',
+      valueThreeTitle: 'Een huis vol geloof',
+      valueThreeFirst: 'Creëer plekken die je dichter',
+      valueThreeSecond: 'bij Zijn aanwezigheid brengen.',
+      wallLights: 'Wandverlichting',
+      candles: 'Kaarsen & houders',
+      vases: 'Vazen & decoratie',
+      shopNow: 'Bekijk de producten',
+      wallImage: 'Verlicht stenen kruis op een warme beige muur',
+      candleImage: 'Warm verlichte stenen kaarshouders',
+      vaseImage: 'Vaas met structuur en olijftakken'
     }
   };
 
@@ -56,10 +108,22 @@
 
     document.documentElement.lang = language;
 
-    const cart = document.querySelector('.cart-link');
-    if (cart && cart.firstChild) {
-      cart.firstChild.textContent = t.cart;
-    }
+    document.querySelectorAll('.cart-link').forEach(cart => {
+      cart.setAttribute(
+        'aria-label',
+        en ? 'Open shopping cart' : 'Open winkelmand'
+      );
+
+      if (cart.hasAttribute('data-icon-cart')) return;
+
+      const textNode = Array.from(cart.childNodes).find(
+        node => node.nodeType === Node.TEXT_NODE
+      );
+
+      if (textNode) {
+        textNode.textContent = t.cart;
+      }
+    });
 
     document.querySelectorAll('.main-nav a').forEach((link, i) => {
       link.textContent = [
@@ -70,47 +134,94 @@
       ][i] || link.textContent;
     });
 
+    const nav = document.querySelector('.main-nav');
+
+    if (nav) {
+      nav.setAttribute(
+        'aria-label',
+        en ? 'Main navigation' : 'Hoofdnavigatie'
+      );
+    }
+
     set('footer p', t.footer);
+
+    set(
+      '#language-button',
+      en ? 'Language: English' : 'Taal: Nederlands'
+    );
+
+    const account = document.getElementById('account-button');
+
+    if (account) {
+      account.setAttribute(
+        'aria-label',
+        en ? 'My account' : 'Mijn account'
+      );
+    }
 
     const page = location.pathname.split('/').pop() || 'index.html';
 
     if (page === 'index.html') {
-      document.title = en
-        ? 'Licht & Liefde - Handmade Candles'
-        : 'Licht & Liefde - Handgemaakte Kaarsen';
+      document.title = 'Diatheke Atelier';
 
-      set('header > p', en
-        ? 'Handmade candles with an encouraging Christian message'
-        : 'Handgemaakte kaarsen met een bemoedigende christelijke tekst');
+      const h = homeWords[language];
 
-      set('.container h2', en
-        ? 'Welcome to Licht & Liefde'
-        : 'Welkom bij Licht & Liefde');
+      document.querySelectorAll('[data-home-text]').forEach(element => {
+        const text = h[element.dataset.homeText];
 
-      set('.container p', en
-        ? 'Every candle is made with love and features a carefully chosen Bible verse or Christian quote. A thoughtful gift for someone special, or a warm and hopeful moment in your own home.'
-        : 'Elke kaars wordt met liefde gemaakt en voorzien van een zorgvuldig gekozen Bijbeltekst of christelijke quote. Perfect als warm cadeau voor een dierbare of om een sfeervol, hoopvol moment in huis te creëren.');
+        if (typeof text === 'string') {
+          element.textContent = text;
+        }
+      });
 
-      set('.container .btn', en
-        ? 'View our products'
-        : 'Bekijk onze producten');
+      document.querySelectorAll('[data-home-alt]').forEach(element => {
+        const text = h[element.dataset.homeAlt];
 
-      set('#language-button', en
-        ? 'Language: English'
-        : 'Taal: Nederlands');
+        if (typeof text === 'string') {
+          element.alt = text;
+        }
+      });
+
+      const values = document.querySelector('.values');
+
+      if (values) {
+        values.setAttribute(
+          'aria-label',
+          en ? 'Our values' : 'Onze waarden'
+        );
+      }
+
+      const categories = document.querySelector('.categories');
+
+      if (categories) {
+        categories.setAttribute(
+          'aria-label',
+          en ? 'Explore the collection' : 'Ontdek de collectie'
+        );
+      }
     }
 
     if (page === 'producten.html') {
       document.title = en
-        ? 'Products - Licht & Liefde'
-        : 'Producten - Licht & Liefde';
+        ? 'Products - Diatheke Atelier'
+        : 'Producten - Diatheke Atelier';
 
       set('header h1', en ? 'Our Products' : 'Onze Producten');
-      set('.section h2', en ? 'Handmade Candles' : 'Handgemaakte Kaarsen');
+
+      set(
+        '.section h2',
+        en ? 'Handmade Candles' : 'Handgemaakte Kaarsen'
+      );
+
       set('#refresh-products-btn', t.refresh);
 
-      const status = document.querySelector('#product-list > p[data-status]');
-      if (status) status.textContent = t[status.dataset.status];
+      const status = document.querySelector(
+        '#product-list > p[data-status]'
+      );
+
+      if (status && t[status.dataset.status]) {
+        status.textContent = t[status.dataset.status];
+      }
     }
 
     if (page === 'product.html') {
@@ -120,21 +231,24 @@
 
     if (page === 'over-ons.html') {
       document.title = en
-        ? 'About Us - Licht & Liefde'
-        : 'Over Ons - Licht & Liefde';
+        ? 'About Us - Diatheke Atelier'
+        : 'Over Ons - Diatheke Atelier';
 
       set('header h1', en ? 'About Us' : 'Over Ons');
 
-      set('.container h2', en
-        ? 'The story behind Licht & Liefde'
-        : 'Het verhaal achter Licht & Liefde');
+      set(
+        '.container h2',
+        en
+          ? 'The story behind Diatheke Atelier'
+          : 'Het verhaal achter Diatheke Atelier'
+      );
 
       const paragraphs = document.querySelectorAll('.container p');
 
       if (paragraphs[0]) {
         paragraphs[0].innerHTML = en
-          ? 'Welcome to <strong>Licht & Liefde</strong>! We believe a candle can bring more than a cosy atmosphere: it can also bring warmth and hope into your home.'
-          : 'Welkom bij <strong>Licht & Liefde</strong>! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.';
+          ? 'Welcome to <strong>Diatheke Atelier</strong>! We believe a candle can bring more than a cosy atmosphere: it can also bring warmth and hope into your home.'
+          : 'Welkom bij <strong>Diatheke Atelier</strong>! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.';
       }
 
       if (paragraphs[1]) {
@@ -145,23 +259,30 @@
     }
 
     if (page === 'contact.html') {
-      document.title = 'Contact - Licht & Liefde';
+      document.title = 'Contact - Diatheke Atelier';
 
-      set('.container h2', en
-        ? 'Questions or orders?'
-        : 'Interesse of bestellen?');
+      set(
+        '.container h2',
+        en ? 'Questions or orders?' : 'Interesse of bestellen?'
+      );
 
-      set('.container p', en
-        ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
-        : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!');
+      set(
+        '.container p',
+        en
+          ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
+          : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
+      );
 
-      set('.container .btn', en
-        ? 'Send a message'
-        : 'Stuur een berichtje');
+      set(
+        '.container .btn',
+        en ? 'Send a message' : 'Stuur een berichtje'
+      );
     }
   }
 
   function choose(value) {
+    if (value !== 'nl' && value !== 'en') return;
+
     language = value;
 
     try {
@@ -169,51 +290,95 @@
     } catch (_) {}
 
     const currentDialog = document.getElementById('language-dialog');
+
     if (currentDialog) currentDialog.remove();
 
     apply();
     window.dispatchEvent(new Event('site-language-change'));
+
+    if (
+      dialogReturnFocus instanceof HTMLElement &&
+      dialogReturnFocus.isConnected
+    ) {
+      dialogReturnFocus.focus();
+    }
   }
 
   function dialog() {
     const oldDialog = document.getElementById('language-dialog');
-    if (oldDialog) oldDialog.remove();
+
+    if (oldDialog) {
+      oldDialog.querySelector('button')?.focus();
+      return;
+    }
+
+    dialogReturnFocus = document.activeElement;
 
     const overlay = document.createElement('div');
     overlay.id = 'language-dialog';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
     overlay.setAttribute('aria-labelledby', 'language-title');
+    overlay.setAttribute('aria-describedby', 'language-description');
 
     overlay.innerHTML = `
       <div class="language-panel">
-        <h2 id="language-title">Kies je taal / Choose your language</h2>
-        <p>
-          In welke taal wil je de website bekijken?<br>
-          Which language would you prefer?
+        <h2 id="language-title">
+          Choose your language / Kies je taal
+        </h2>
+        <p id="language-description">
+          Which language would you prefer?<br>
+          In welke taal wil je de website bekijken?
         </p>
         <div class="language-actions">
-          <button type="button" data-lang="nl">Nederlands</button>
           <button type="button" data-lang="en">English</button>
+          <button type="button" data-lang="nl">Nederlands</button>
         </div>
       </div>
     `;
 
-    overlay.querySelectorAll('[data-lang]').forEach(button => {
-      button.addEventListener('click', () => choose(button.dataset.lang));
+    const buttons = Array.from(
+      overlay.querySelectorAll('[data-lang]')
+    );
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        choose(button.dataset.lang);
+      });
+    });
+
+    overlay.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        choose(language);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     });
 
     document.body.appendChild(overlay);
-    overlay.querySelector('button').focus();
+    buttons[0].focus();
   }
 
   const css = document.createElement('style');
 
   css.textContent = `
     #language-button {
-      border: 0;
       cursor: pointer;
     }
+
     #language-dialog {
       position: fixed;
       inset: 0;
@@ -222,45 +387,61 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: rgba(25, 20, 18, .72);
+      background: rgba(38, 29, 20, .68);
       box-sizing: border-box;
     }
+
     .language-panel {
-      width: min(100%, 430px);
-      padding: 30px;
+      width: min(100%, 450px);
+      max-height: calc(100dvh - 40px);
+      overflow-y: auto;
+      padding: 32px;
       box-sizing: border-box;
-      border-radius: 10px;
-      background: #fcfbfa;
-      color: #3b3533;
+      border: 1px solid #d7c5ae;
+      border-radius: 6px;
+      background: #faf7f2;
+      color: #3d3024;
       text-align: center;
-      box-shadow: 0 15px 45px rgba(0, 0, 0, .25);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, .2);
     }
+
     .language-panel h2 {
-      margin: 0 0 12px;
+      margin: 0 0 14px;
       font-family: Georgia, serif;
+      font-weight: normal;
       font-size: 1.5rem;
+      line-height: 1.3;
     }
+
     .language-panel p {
       margin: 0 0 24px;
+      line-height: 1.6;
     }
+
     .language-actions {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 12px;
     }
+
     .language-actions button {
-      padding: 11px 18px;
+      padding: 12px 23px;
       border: 0;
-      border-radius: 5px;
-      background: #8c7b70;
+      border-radius: 3px;
+      background: #a67c48;
       color: #fff;
       cursor: pointer;
-      font: inherit;
+      font: 14px Arial, sans-serif;
     }
-    .language-actions button:hover,
+
+    .language-actions button:hover {
+      background: #906739;
+    }
+
     .language-actions button:focus-visible {
-      background: #736359;
+      outline: 2px solid #3d3024;
+      outline-offset: 4px;
     }
   `;
 
@@ -276,6 +457,7 @@
     apply();
 
     const languageButton = document.getElementById('language-button');
+
     if (languageButton) {
       languageButton.addEventListener('click', dialog);
     }
