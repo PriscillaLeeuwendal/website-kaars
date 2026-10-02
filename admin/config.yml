@@ -12,12 +12,51 @@ collections:
     label: "Producten"
     folder: "content/producten"
     create: true
+
     fields:
-      - {label: "Titel", name: "title", widget: "string"}
-      - {label: "Titel Engels", name: "title_en", widget: "string", required: false}
-      - {label: "Prijs", name: "price", widget: "number"}
-      - {label: "Beschrijving", name: "description", widget: "text"}
-      - {label: "Beschrijving Engels", name: "description_en", widget: "text", required: false}
-      - {label: "Uitgebreide omschrijving", name: "long_description", widget: "text", required: false}
-      - {label: "Uitgebreide omschrijving Engels", name: "long_description_en", widget: "text", required: false}
-      - {label: "Afbeelding", name: "image", widget: "image"}
+      - label: "Titel"
+        name: "title"
+        widget: "string"
+
+      - label: "Titel Engels"
+        name: "title_en"
+        widget: "string"
+        required: false
+
+      - label: "Prijs"
+        name: "price"
+        widget: "number"
+
+      - label: "Beschrijving"
+        name: "description"
+        widget: "text"
+
+      - label: "Beschrijving Engels"
+        name: "description_en"
+        widget: "text"
+        required: false
+
+      - label: "Uitgebreide omschrijving"
+        name: "long_description"
+        widget: "text"
+        required: false
+
+      - label: "Uitgebreide omschrijving Engels"
+        name: "long_description_en"
+        widget: "text"
+        required: false
+
+      - label: "Hoofdfoto"
+        name: "image"
+        widget: "image"
+
+      - label: "Extra foto’s"
+        name: "extra_images"
+        widget: "list"
+        required: false
+        default: []
+        hint: "De hoofdfoto staat altijd vooraan. Voeg hier extra foto’s toe en zet ze in de gewenste volgorde."
+        field:
+          label: "Foto"
+          name: "image"
+          widget: "image"
