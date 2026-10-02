@@ -1,72 +1,108 @@
 (() => {
   'use strict';
 
-  const API = 'https://licht-en-liefde-api.timdekruyf07.workers.dev';
-  const REPO = 'https://api.github.com/repos/timdekruyf07-dotcom/website-kaars';
-  const CART_KEY = 'licht-en-liefde-winkelmand-v1';
-  const MAX_QUANTITY = 1000;
+  const API =
+    'https://licht-en-liefde-api.timdekruyf07.workers.dev';
 
-  let cart = {};
-  const products = new Map();
+  const REPO =
+    'https://api.github.com/repos/timdekruyf07-dotcom/website-kaars';
+
+  const KEY = 'licht-en-liefde-winkelmand-v1';
+
   let panel = null;
   let previousFocus = null;
   let refreshing = false;
 
-  const en = () => window.siteLanguage?.get() === 'en';
-  const text = (nl, english) => en() ? english : nl;
+  const products = new Map();
+
+  const text = (nl, english) => {
+    return window.siteLanguage?.get() === 'en' ? english : nl;
+  };
+
+  const validId = id => {
+    return (
+      typeof id === 'string' &&
+      /^[a-zA-Z0-9_-]+$/.test(id)
+    );
+  };
 
   function element(tag, className, content) {
     const node = document.createElement(tag);
+
     if (className) node.className = className;
     if (content !== undefined) node.textContent = content;
+
     return node;
   }
 
   function money(cents) {
-    return new Intl.NumberFormat(en() ? 'en-IE' : 'nl-NL', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(cents / 100);
+    return new Intl.NumberFormat(
+      window.siteLanguage?.get() === 'en' ? 'en-IE' : 'nl-NL',
+      {
+        style: 'currency',
+        currency: 'EUR'
+      }
+    ).format(cents / 100);
   }
 
-  function validId(id) {
-    return typeof id === 'string' && /^[a-zA-Z0-9_-]+$/.test(id);
-  }
-
-  function readCart() {
-    const result = {};
+  function readState() {
+    const state = {
+      items: {},
+      completed: []
+    };
 
     try {
-      const saved = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+      const raw = JSON.parse(
+        localStorage.getItem(KEY) || '{}'
+      );
 
-      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) {
-        return result;
+      const items = raw?.format === 2 ? raw.items : raw;
+
+      if (
+        items &&
+        typeof items === 'object' &&
+        !Array.isArray(items)
+      ) {
+        for (const [id, quantity] of Object.entries(items)) {
+          if (
+            validId(id) &&
+            Number.isSafeInteger(quantity) &&
+            quantity > 0 &&
+            quantity <= 1000
+          ) {
+            state.items[id] = quantity;
+          }
+        }
       }
 
-      for (const [id, quantity] of Object.entries(saved)) {
-        if (
-          validId(id) &&
-          Number.isSafeInteger(quantity) &&
-          quantity > 0 &&
-          quantity <= MAX_QUANTITY
-        ) {
-          result[id] = quantity;
-        }
+      if (
+        raw?.format === 2 &&
+        Array.isArray(raw.completed)
+      ) {
+        state.completed = raw.completed.filter(id => {
+          return typeof id === 'string';
+        });
       }
     } catch (_) {}
 
-    return result;
+    return state;
   }
 
-  cart = readCart();
+  let state = readState();
 
-  function saveCart() {
+  function persist() {
     try {
-      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({
+          format: 2,
+          ...state
+        })
+      );
     } catch (_) {
-      alert(text(
-        'Je browser kan de winkelmand niet bewaren. De artikelen blijven in deze tab beschikbaar totdat je de pagina verlaat.',
-        'Your browser cannot save the cart. Items remain available in this tab until you leave the page.'
+      throw new Error(text(
+        'Je browser kan de winkelmand niet bewaren. Sta websiteopslag toe en probeer opnieuw.',
+        'Your browser cannot save the cart. Allow website storage and try again.'
       ));
     }
 
@@ -74,37 +110,84 @@
   }
 
   function updateCount() {
-    const count = Object.values(cart).reduce((sum, quantity) => {
-      return sum + quantity;
-    }, 0);
+    const count = Object.values(state.items).reduce(
+      (sum, quantity) => sum + quantity,
+      0
+    );
 
     document.querySelectorAll('[data-cart-count]').forEach(node => {
       node.textContent = String(count);
     });
   }
 
-  async function request(url, parse = 'json') {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+  function snapshot() {
+    state = readState();
 
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        cache: 'no-store'
+    return Object.entries(state.items)
+      .map(([product_id, quantity]) => ({
+        product_id,
+        quantity
+      }))
+      .sort((a, b) => {
+        return a.product_id.localeCompare(b.product_id);
       });
+  }
 
-      if (!response.ok) {
-        const error = new Error(`HTTP ${response.status}`);
-        error.status = response.status;
-        throw error;
+  async function completeOrder(orderId, items) {
+    async function apply() {
+      state = readState();
+
+      if (state.completed.includes(orderId)) return;
+
+      for (const item of items) {
+        if (
+          !validId(item.product_id) ||
+          !Number.isSafeInteger(item.quantity) ||
+          item.quantity <= 0
+        ) {
+          throw new Error('Ongeldige bestelling');
+        }
+
+        const remaining =
+          (state.items[item.product_id] || 0) -
+          item.quantity;
+
+        if (remaining > 0) {
+          state.items[item.product_id] = remaining;
+        } else {
+          delete state.items[item.product_id];
+        }
       }
 
-      return parse === 'text'
-        ? await response.text()
-        : await response.json();
-    } finally {
-      clearTimeout(timeout);
+      state.completed.push(orderId);
+      persist();
     }
+
+    if (navigator.locks) {
+      return navigator.locks.request(
+        'licht-en-liefde-cart',
+        apply
+      );
+    }
+
+    return apply();
+  }
+
+  async function request(url, parse = 'json') {
+    const response = await fetch(url, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12000)
+    });
+
+    if (!response.ok) {
+      const error = new Error(`HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    return parse === 'text'
+      ? response.text()
+      : response.json();
   }
 
   function parseProduct(id, content) {
@@ -125,7 +208,7 @@
       !Number.isFinite(price) ||
       price < 0
     ) {
-      throw new Error('Ongeldige productgegevens');
+      throw new Error('Ongeldig product');
     }
 
     const cents = Math.round(price * 100);
@@ -134,10 +217,15 @@
       !Number.isSafeInteger(cents) ||
       Math.abs(price * 100 - cents) > 0.000001
     ) {
-      throw new Error('De prijs moet maximaal twee decimalen hebben');
+      throw new Error('Ongeldige prijs');
     }
 
-    const product = { ...data, id, cents };
+    const product = {
+      ...data,
+      id,
+      cents
+    };
+
     products.set(id, product);
     return product;
   }
@@ -153,10 +241,14 @@
       `${REPO}/contents/content/producten/${encodeURIComponent(id)}.md?ref=main`
     );
 
-    if (!file.download_url) throw new Error('Productbestand ontbreekt');
+    if (!file.download_url) {
+      throw new Error('Productbestand ontbreekt');
+    }
 
-    const content = await request(file.download_url, 'text');
-    return parseProduct(id, content);
+    return parseProduct(
+      id,
+      await request(file.download_url, 'text')
+    );
   }
 
   async function listProducts() {
@@ -165,23 +257,30 @@
     );
 
     if (!Array.isArray(files)) {
-      throw new Error('Productenmap niet gevonden');
+      throw new Error('Productenmap ontbreekt');
     }
 
-    const productFiles = files.filter(file => {
-      return file.type === 'file' && file.name.endsWith('.md');
-    });
+    return Promise.all(
+      files
+        .filter(file => {
+          return (
+            file.type === 'file' &&
+            file.name.endsWith('.md')
+          );
+        })
+        .map(async file => {
+          const id = file.name.slice(0, -3);
 
-    return Promise.all(productFiles.map(async file => {
-      const id = file.name.slice(0, -3);
+          if (!validId(id) || !file.download_url) {
+            throw new Error('Ongeldig productbestand');
+          }
 
-      if (!validId(id) || !file.download_url) {
-        throw new Error('Ongeldig productbestand');
-      }
-
-      const content = await request(file.download_url, 'text');
-      return parseProduct(id, content);
-    }));
+          return parseProduct(
+            id,
+            await request(file.download_url, 'text')
+          );
+        })
+    );
   }
 
   async function getStock(id) {
@@ -194,38 +293,41 @@
       !Number.isSafeInteger(data.available) ||
       data.available < 0
     ) {
-      throw new Error('Ongeldige voorraadinformatie');
+      throw new Error('Ongeldige voorraad');
     }
 
     return data.available;
   }
 
   function title(product) {
-    return en() && product.title_en
+    return (
+      window.siteLanguage?.get() === 'en' &&
+      product.title_en
+    )
       ? product.title_en
       : product.title;
   }
 
   function description(product, long = false) {
-    if (en()) {
-      return (
-        (long && product.long_description_en) ||
-        product.description_en ||
-        (long && product.long_description) ||
-        product.description ||
-        ''
-      );
-    }
-
-    return (
-      (long && product.long_description) ||
-      product.description ||
-      ''
-    );
+    return window.siteLanguage?.get() === 'en'
+      ? (
+          (long && product.long_description_en) ||
+          product.description_en ||
+          (long && product.long_description) ||
+          product.description ||
+          ''
+        )
+      : (
+          (long && product.long_description) ||
+          product.description ||
+          ''
+        );
   }
 
   function imageUrl(value) {
-    if (typeof value !== 'string' || !value.trim()) return '';
+    if (typeof value !== 'string' || !value.trim()) {
+      return '';
+    }
 
     const path = value.trim();
 
@@ -235,39 +337,40 @@
         new URL('.', location.href)
       );
 
-      return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
+      return ['https:', 'http:'].includes(url.protocol)
+        ? url.href
+        : '';
     } catch (_) {
       return '';
     }
   }
 
   async function add(product, button) {
-    const originalLabel = button.textContent;
+    const label = button.textContent;
+
     button.disabled = true;
-    button.textContent = text('Even controleren...', 'Checking...');
+    button.textContent = text(
+      'Even controleren...',
+      'Checking...'
+    );
 
     try {
       const available = await getStock(product.id);
-      const current = cart[product.id] || 0;
 
-      if (available === 0) {
+      state = readState();
+
+      const current = state.items[product.id] || 0;
+
+      if (current >= Math.min(available, 1000)) {
         alert(text(
-          'Dit product is momenteel uitverkocht.',
-          'This product is currently sold out.'
+          'Er is geen extra voorraad beschikbaar voor je winkelmand.',
+          'No additional stock is available for your cart.'
         ));
         return;
       }
 
-      if (current >= Math.min(available, MAX_QUANTITY)) {
-        alert(text(
-          'Je hebt het beschikbare aantal van dit product al in je winkelmand.',
-          'Your cart already contains the available quantity of this product.'
-        ));
-        return;
-      }
-
-      cart[product.id] = current + 1;
-      saveCart();
+      state.items[product.id] = current + 1;
+      persist();
       openCart();
     } catch (error) {
       alert(error.status === 404
@@ -276,13 +379,13 @@
             'Stock has not yet been configured for this product.'
           )
         : text(
-            'De voorraad kon niet worden gecontroleerd. Probeer het zo opnieuw.',
-            'Stock could not be checked. Please try again shortly.'
+            'Toevoegen is niet gelukt. Controleer je verbinding en probeer opnieuw.',
+            'Could not add the product. Check your connection and try again.'
           )
       );
     } finally {
       button.disabled = false;
-      button.textContent = originalLabel;
+      button.textContent = label;
     }
   }
 
@@ -291,6 +394,7 @@
 
     panel.remove();
     panel = null;
+
     document.body.style.overflow = '';
     previousFocus?.focus();
   }
@@ -301,13 +405,17 @@
     const content = panel.querySelector('.cart-content');
     content.replaceChildren();
 
-    const ids = Object.keys(cart);
+    const ids = Object.keys(state.items);
 
     if (!ids.length) {
-      content.append(element('p', '', text(
-        'Je winkelmand is nog leeg.',
-        'Your cart is empty.'
-      )));
+      content.append( element(
+        'p',
+        '',
+        text(
+          'Je winkelmand is nog leeg.',
+          'Your cart is empty.'
+        )
+      ));
       return;
     }
 
@@ -321,49 +429,80 @@
 
       if (product) {
         const link = element('a', '', title(product));
-        link.href = `product.html?product=${encodeURIComponent(id)}`;
+
+        link.href =
+          `product.html?product=${encodeURIComponent(id)}`;
 
         info.append(
           link,
           element('p', '', money(product.cents))
         );
 
-        subtotal += product.cents * cart[id];
+        subtotal += product.cents * state.items[id];
       } else {
         complete = false;
-        info.append(element('p', '', text(
-          'Productgegevens niet beschikbaar.',
-          'Product details unavailable.'
-        )));
+
+        info.append(element(
+          'p',
+          '',
+          text(
+            'Productgegevens niet beschikbaar.',
+            'Product details unavailable.'
+          )
+        ));
       }
 
       const controls = element('div', 'cart-controls');
       const minus = element('button', '', '−');
-      const quantity = element('span', '', String(cart[id]));
+      const number = element(
+        'span',
+        '',
+        String(state.items[id])
+      );
       const plus = element('button', '', '+');
-      const remove = element('button', 'cart-remove', text(
-        'Verwijderen',
-        'Remove'
-      ));
+      const remove = element(
+        'button',
+        'cart-remove',
+        text('Verwijderen', 'Remove')
+      );
 
       minus.type = plus.type = remove.type = 'button';
 
-      minus.setAttribute('aria-label', text(
-        'Aantal verlagen',
-        'Decrease quantity'
-      ));
+      minus.setAttribute(
+        'aria-label',
+        text('Aantal verlagen', 'Decrease quantity')
+      );
 
-      plus.setAttribute('aria-label', text(
-        'Aantal verhogen',
-        'Increase quantity'
-      ));
+      plus.setAttribute(
+        'aria-label',
+        text('Aantal verhogen', 'Increase quantity')
+      );
+
+      function change(fn) {
+        try {
+          state = readState();
+          fn();
+          persist();
+          renderCart();
+        } catch (error) {
+          alert(error.message);
+        }
+      }
 
       minus.addEventListener('click', () => {
-        if (cart[id] > 1) cart[id]--;
-        else delete cart[id];
+        change(() => {
+          if (state.items[id] > 1) {
+            state.items[id]--;
+          } else {
+            delete state.items[id];
+          }
+        });
+      });
 
-        saveCart();
-        renderCart();
+      remove.addEventListener('click', () => {
+        change(() => {
+          delete state.items[id];
+        });
       });
 
       plus.disabled = !product || refreshing;
@@ -373,16 +512,22 @@
 
         try {
           const available = await getStock(id);
-          const current = cart[id] || 0;
 
-          if (current >= Math.min(available, MAX_QUANTITY)) {
+          state = readState();
+
+          if (
+            (state.items[id] || 0) >=
+            Math.min(available, 1000)
+          ) {
             alert(text(
               'Er is geen extra voorraad beschikbaar.',
               'No additional stock is available.'
             ));
           } else {
-            cart[id] = current + 1;
-            saveCart();
+            state.items[id] =
+              (state.items[id] || 0) + 1;
+
+            persist();
           }
         } catch (_) {
           alert(text(
@@ -394,27 +539,24 @@
         }
       });
 
-      remove.addEventListener('click', () => {
-        delete cart[id];
-        saveCart();
-        renderCart();
-      });
-
-      controls.append(minus, quantity, plus, remove);
+      controls.append(minus, number, plus, remove);
       row.append(info, controls);
       content.append(row);
     }
 
-    if (!complete || refreshing) {
-      content.append(element('p', 'cart-note', refreshing
-        ? text(
-            'Actuele productgegevens worden geladen...',
-            'Loading current product details...'
-          )
-        : text(
-            'Niet alle producten konden worden geladen. Sluit de winkelmand en probeer het opnieuw.',
-            'Some products could not be loaded. Close the cart and try again.'
-          )
+    if (refreshing || !complete) {
+      content.append(element(
+        'p',
+        'cart-note',
+        refreshing
+          ? text(
+              'Actuele productgegevens worden geladen...',
+              'Loading current product details...'
+            )
+          : text(
+              'Sluit de winkelmand en probeer opnieuw: niet alle producten konden worden geladen.',
+              'Close the cart and try again: some products could not be loaded.'
+            )
       ));
     }
 
@@ -422,59 +564,99 @@
       const totals = element('div', 'cart-totals');
 
       totals.append(
-        element('p', '', `${text('Producten', 'Products')}: ${money(subtotal)}`),
-        element('p', '', `${text(
-          'Verzending binnen Nederland',
-          'Shipping within the Netherlands'
-        )}: ${money(795)}`),
-        element('strong', '', `${text('Totaal', 'Total')}: ${money(subtotal + 795)}`)
+        element(
+          'p',
+          '',
+          `${text('Producten', 'Products')}: ${money(subtotal)}`
+        ),
+        element(
+          'p',
+          '',
+          `${text(
+            'Verzending binnen Nederland',
+            'Shipping within the Netherlands'
+          )}: ${money(795)}`
+        ),
+        element(
+          'strong',
+          '',
+          `${text('Totaal', 'Total')}: ${money(subtotal + 795)}`
+        )
       );
 
       content.append(totals);
     }
 
-    const checkout = element('button', 'shop-button', text(
-      'Afrekenen — binnenkort beschikbaar',
-      'Checkout — available soon'
-    ));
+    const checkout = element(
+      'button',
+      'shop-button',
+      text('Afrekenen', 'Checkout')
+    );
 
     checkout.type = 'button';
-    checkout.disabled = true;
+    checkout.disabled = refreshing || !complete;
+
+    checkout.addEventListener('click', () => {
+      location.href = 'afrekenen.html';
+    });
 
     content.append(
       checkout,
-      element('p', 'cart-note', text(
-        'De winkelmand is klaar om te testen. Betalen wordt in de volgende stap aangesloten. Artikelen in de winkelmand zijn nog niet gereserveerd.',
-        'The cart is ready for testing. Payment will be connected in the next step. Items in the cart are not yet reserved.'
-      ))
+      element(
+        'p',
+        'cart-note',
+        text(
+          'Testmodus: je betaalt nog geen echt geld. Artikelen in de winkelmand zijn nog niet gereserveerd.',
+          'Test mode: no real money is charged. Items in the cart are not yet reserved.'
+        )
+      )
     );
   }
 
   async function openCart() {
     if (panel) return;
 
+    state = readState();
     previousFocus = document.activeElement;
+
     panel = element('div', 'cart-overlay');
-    panel.id = 'shop-cart-dialog';
 
     const dialog = element('section', 'cart-panel');
+
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
-    dialog.setAttribute('aria-labelledby', 'shop-cart-title');
+    dialog.setAttribute(
+      'aria-labelledby',
+      'shop-cart-title'
+    );
+
     dialog.tabIndex = -1;
 
-    const heading = element('h2', '', text('Winkelmand', 'Cart'));
+    const heading = element(
+      'h2',
+      '',
+      text('Winkelmand', 'Cart')
+    );
+
     heading.id = 'shop-cart-title';
 
-    const close = element('button', 'cart-close', text('Sluiten', 'Close'));
+    const close = element(
+      'button',
+      'cart-close',
+      text('Sluiten', 'Close')
+    );
+
     close.type = 'button';
     close.addEventListener('click', closeCart);
 
     const top = element('div', 'cart-top');
     top.append(heading, close);
 
-    const content = element('div', 'cart-content');
-    dialog.append(top, content);
+    dialog.append(
+      top,
+      element('div', 'cart-content')
+    );
+
     panel.append(dialog);
     document.body.append(panel);
     document.body.style.overflow = 'hidden';
@@ -492,20 +674,25 @@
 
       if (event.key !== 'Tab') return;
 
-      const focusable = [...dialog.querySelectorAll(
-        'a[href], button:not(:disabled), [tabindex="0"]'
-      )];
+      const nodes = [
+        ...dialog.querySelectorAll(
+          'a[href], button:not(:disabled)'
+        )
+      ];
 
-      if (!focusable.length) {
+      if (!nodes.length) {
         event.preventDefault();
         dialog.focus();
         return;
       }
 
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
 
-      if (event.shiftKey && document.activeElement === first) {
+      if (
+        event.shiftKey &&
+        document.activeElement === first
+      ) {
         event.preventDefault();
         last.focus();
       } else if (
@@ -522,7 +709,9 @@
     close.focus();
 
     await Promise.allSettled(
-      Object.keys(cart).map(id => getProduct(id, true))
+      Object.keys(state.items).map(id => {
+        return getProduct(id, true);
+      })
     );
 
     refreshing = false;
@@ -531,10 +720,11 @@
 
   document.addEventListener('click', event => {
     const link = event.target.closest('[data-open-cart]');
-    if (!link) return;
 
-    event.preventDefault();
-    openCart();
+    if (link) {
+      event.preventDefault();
+      openCart();
+    }
   });
 
   window.addEventListener('site-language-change', () => {
@@ -552,9 +742,9 @@
   });
 
   window.addEventListener('storage', event => {
-    if (event.key !== CART_KEY && event.key !== null) return;
+    if (event.key !== KEY && event.key !== null) return;
 
-    cart = readCart();
+    state = readState();
     updateCount();
 
     if (panel) {
@@ -577,8 +767,9 @@
       box-sizing: border-box;
       background: rgba(25,20,18,.72);
     }
+
     .cart-panel {
-      width: min(100%, 650px);
+      width: min(100%,650px);
       max-height: 85vh;
       overflow-y: auto;
       background: #fcfbfa;
@@ -588,6 +779,7 @@
       box-sizing: border-box;
       box-shadow: 0 15px 45px rgba(0,0,0,.25);
     }
+
     .cart-top {
       display: flex;
       align-items: center;
@@ -595,8 +787,11 @@
       gap: 15px;
       margin-bottom: 20px;
     }
+
     .cart-top h2 { margin: 0; }
-    .cart-close, .cart-controls button {
+
+    .cart-close,
+    .cart-controls button {
       border: 1px solid #d9cec5;
       background: #f4efe9;
       color: #4a4543;
@@ -605,6 +800,7 @@
       cursor: pointer;
       font: inherit;
     }
+
     .cart-row {
       display: flex;
       align-items: center;
@@ -613,9 +809,16 @@
       padding: 18px 0;
       border-bottom: 1px solid #e8e1da;
     }
+
     .cart-row-info { min-width: 0; }
-    .cart-row-info a { color: #736359; font-weight: bold; }
+
+    .cart-row-info a {
+      color: #736359;
+      font-weight: bold;
+    }
+
     .cart-row-info p { margin: 5px 0 0; }
+
     .cart-controls {
       display: flex;
       align-items: center;
@@ -623,18 +826,34 @@
       gap: 10px;
       flex-wrap: wrap;
     }
-    .cart-controls .cart-remove { font-size: .85em; }
+
+    .cart-remove { font-size: .85em !important; }
+
     .cart-totals { padding: 20px 0; }
     .cart-totals p { margin: 5px 0; }
-    .cart-totals strong { display: block; margin-top: 12px; }
-    .cart-note { font-size: .9em; color: #7a706b; }
+
+    .cart-totals strong {
+      display: block;
+      margin-top: 12px;
+    }
+
+    .cart-note {
+      font-size: .9em;
+      color: #7a706b;
+    }
+
     .shop-button:disabled,
     .cart-controls button:disabled {
       opacity: .6;
       cursor: not-allowed;
     }
-    @media(max-width: 550px) {
-      .cart-row { align-items: start; flex-direction: column; }
+
+    @media (max-width: 550px) {
+      .cart-row {
+        align-items: start;
+        flex-direction: column;
+      }
+
       .cart-controls { justify-content: flex-start; }
       .cart-panel { padding: 20px; }
     }
@@ -652,7 +871,10 @@
     money,
     add,
     element,
-    text
+    text,
+    snapshot,
+    completeOrder,
+    API
   };
 
   updateCount();
