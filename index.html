@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Diatheke Atelier — faith-centered home décor. Covenant. Light. Presence.">
+  <meta name="description" content="Diatheke Atelier — faith-centered home décor. Covenant · Light · Presence">
   <title>Diatheke Atelier</title>
 
   <style>
@@ -552,14 +552,14 @@
 
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html" class="active" aria-current="page">Home</a>
-        <a href="producten.html">Products</a>
-        <a href="over-ons.html">About us</a>
+        <a href="producten.html">Shop</a>
+        <a href="over-ons.html">Our Story</a>
         <a href="contact.html">Contact</a>
       </nav>
 
       <div class="header-actions">
-        <button
-          type="button"
+        <a
+          href="account.html"
           class="icon-button"
           id="account-button"
           aria-label="My account"
@@ -568,7 +568,7 @@
             <circle cx="12" cy="7.5" r="3.5"></circle>
             <path d="M4.5 21v-2.5a7.5 7.5 0 0 1 15 0V21z"></path>
           </svg>
-        </button>
+        </a>
 
         <a
           href="#winkelmand"
@@ -602,7 +602,7 @@
           <div class="hero-rule" aria-hidden="true"></div>
 
           <p class="hero-tagline" data-home-text="tagline">
-            Covenant. Light. Presence.
+            Covenant · Light · Presence
           </p>
 
           <a href="producten.html" class="collection-button">
@@ -620,7 +620,9 @@
             <path d="M11 43V23C11 13 17 7 24 3c7 4 13 10 13 20v20z"></path>
             <path d="M24 3v40M11 23h26M15 11l9 12 9-12"></path>
           </svg>
+
           <h2 data-home-text="valueOneTitle">Faith-Centered Design</h2>
+
           <p>
             <span data-home-text="valueOneFirst">Refined home décor that illuminates</span><br>
             <span data-home-text="valueOneSecond">His promises.</span>
@@ -632,7 +634,9 @@
             <circle cx="24" cy="24" r="10"></circle>
             <path d="M24 2v7M24 39v7M2 24h7M39 24h7M8 8l5 5M35 35l5 5M8 40l5-5M35 13l5-5"></path>
           </svg>
+
           <h2 data-home-text="valueTwoTitle">Timeless Craftsmanship</h2>
+
           <p>
             <span data-home-text="valueTwoFirst">Natural materials. Lasting beauty.</span><br>
             <span data-home-text="valueTwoSecond">Eternal meaning.</span>
@@ -643,7 +647,9 @@
           <svg class="value-icon" viewBox="0 0 48 48" aria-hidden="true">
             <path d="M10 44C22 33 29 21 37 4M20 33C9 32 8 24 11 19c8 1 11 6 9 14zM27 23c-8-2-9-9-5-15 7 3 8 8 5 15zM29 21c1-8 7-12 15-10-1 7-7 11-15 10zM21 34c5-8 11-10 18-5-4 6-10 8-18 5z"></path>
           </svg>
+
           <h2 data-home-text="valueThreeTitle">A More Sacred Home</h2>
+
           <p>
             <span data-home-text="valueThreeFirst">Create spaces that draw you</span><br>
             <span data-home-text="valueThreeSecond">closer to His presence.</span>
@@ -661,8 +667,11 @@
             width="1672"
             height="941"
           >
+
           <span class="category-caption">
-            <span class="category-title" data-home-text="wallLights">Wall Lights</span>
+            <span class="category-title" data-home-text="wallLights">
+              Wall Lights
+            </span>
             <span class="category-cta">
               <span data-home-text="shopNow">Shop Now</span> →
             </span>
@@ -678,8 +687,11 @@
             width="1684"
             height="934"
           >
+
           <span class="category-caption">
-            <span class="category-title" data-home-text="candles">Candles &amp; Vessels</span>
+            <span class="category-title" data-home-text="candles">
+              Candles &amp; Vessels
+            </span>
             <span class="category-cta">
               <span data-home-text="shopNow">Shop Now</span> →
             </span>
@@ -695,8 +707,11 @@
             width="1682"
             height="934"
           >
+
           <span class="category-caption">
-            <span class="category-title" data-home-text="vases">Vases &amp; Décor</span>
+            <span class="category-title" data-home-text="vases">
+              Vases &amp; Décor
+            </span>
             <span class="category-cta">
               <span data-home-text="shopNow">Shop Now</span> →
             </span>
@@ -713,15 +728,6 @@
 
   <script src="taal.js"></script>
   <script src="winkelmand.js"></script>
-
-  <script>
-    document.getElementById('account-button').addEventListener('click', () => {
-      alert(
-        window.siteLanguage.get() === 'nl'
-          ? 'Een account aanmaken is binnenkort beschikbaar.'
-          : 'Creating an account will be available soon.'
-      );
-    });
-  </script>
+  <script src="account.js"></script>
 </body>
 </html>
