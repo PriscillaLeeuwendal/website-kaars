@@ -60,3 +60,220 @@ collections:
           label: "Foto"
           name: "image"
           widget: "image"
+
+  - name: "website"
+    label: "Website aanpassen"
+
+    files:
+      - name: "website_inhoud"
+        label: "Teksten, foto’s en contactgegevens"
+        file: "content/website.json"
+        format: "json"
+
+        fields:
+          - label: "Home"
+            name: "home"
+            widget: "object"
+            collapsed: true
+
+            fields:
+              - label: "Grote achtergrondfoto"
+                name: "hero_image"
+                widget: "image"
+                hint: "Gebruik bij voorkeur een brede foto van goede kwaliteit."
+
+              - label: "Foto van het linker collectieblok"
+                name: "wall_image"
+                widget: "image"
+
+              - label: "Foto van het middelste collectieblok"
+                name: "candle_image"
+                widget: "image"
+
+              - label: "Foto van het rechter collectieblok"
+                name: "vase_image"
+                widget: "image"
+
+              - label: "Engelse teksten"
+                name: "en"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Kleine introductie — regel 1", name: "eyebrowFirst", widget: "string"}
+                  - {label: "Kleine introductie — regel 2", name: "eyebrowSecond", widget: "string"}
+
+                  - {label: "Grote titel — regel 1", name: "titleFirst", widget: "string"}
+                  - {label: "Grote titel — regel 2", name: "titleSecond", widget: "string"}
+
+                  - label: "Tekst onder de grote titel"
+                    name: "tagline"
+                    widget: "string"
+                    hint: "Bijvoorbeeld: Covenant · Light · Presence"
+
+                  - {label: "Tekst van de collectieknop", name: "collection", widget: "string"}
+
+                  - {label: "Linker waarde — titel", name: "valueOneTitle", widget: "string"}
+                  - {label: "Linker waarde — tekst regel 1", name: "valueOneFirst", widget: "string"}
+                  - {label: "Linker waarde — tekst regel 2", name: "valueOneSecond", widget: "string", required: false}
+
+                  - {label: "Middelste waarde — titel", name: "valueTwoTitle", widget: "string"}
+                  - {label: "Middelste waarde — tekst regel 1", name: "valueTwoFirst", widget: "string"}
+                  - {label: "Middelste waarde — tekst regel 2", name: "valueTwoSecond", widget: "string", required: false}
+
+                  - {label: "Rechter waarde — titel", name: "valueThreeTitle", widget: "string"}
+                  - {label: "Rechter waarde — tekst regel 1", name: "valueThreeFirst", widget: "string"}
+                  - {label: "Rechter waarde — tekst regel 2", name: "valueThreeSecond", widget: "string", required: false}
+
+                  - {label: "Linker collectieblok — titel", name: "wallLights", widget: "string"}
+                  - {label: "Middelste collectieblok — titel", name: "candles", widget: "string"}
+                  - {label: "Rechter collectieblok — titel", name: "vases", widget: "string"}
+                  - {label: "Knoptekst onder de collectieblokken", name: "shopNow", widget: "string"}
+
+                  - label: "Beschrijving van de linker foto"
+                    name: "wallImage"
+                    widget: "string"
+                    hint: "Beschrijf kort wat op de foto staat, voor bezoekers die een schermlezer gebruiken."
+
+                  - {label: "Beschrijving van de middelste foto", name: "candleImage", widget: "string"}
+                  - {label: "Beschrijving van de rechter foto", name: "vaseImage", widget: "string"}
+
+              - label: "Nederlandse teksten"
+                name: "nl"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Kleine introductie — regel 1", name: "eyebrowFirst", widget: "string"}
+                  - {label: "Kleine introductie — regel 2", name: "eyebrowSecond", widget: "string"}
+
+                  - {label: "Grote titel — regel 1", name: "titleFirst", widget: "string"}
+                  - {label: "Grote titel — regel 2", name: "titleSecond", widget: "string"}
+
+                  - label: "Tekst onder de grote titel"
+                    name: "tagline"
+                    widget: "string"
+                    hint: "Bijvoorbeeld: Verbond · Licht · Aanwezigheid"
+
+                  - {label: "Tekst van de collectieknop", name: "collection", widget: "string"}
+
+                  - {label: "Linker waarde — titel", name: "valueOneTitle", widget: "string"}
+                  - {label: "Linker waarde — tekst regel 1", name: "valueOneFirst", widget: "string"}
+                  - {label: "Linker waarde — tekst regel 2", name: "valueOneSecond", widget: "string", required: false}
+
+                  - {label: "Middelste waarde — titel", name: "valueTwoTitle", widget: "string"}
+                  - {label: "Middelste waarde — tekst regel 1", name: "valueTwoFirst", widget: "string"}
+                  - {label: "Middelste waarde — tekst regel 2", name: "valueTwoSecond", widget: "string", required: false}
+
+                  - {label: "Rechter waarde — titel", name: "valueThreeTitle", widget: "string"}
+                  - {label: "Rechter waarde — tekst regel 1", name: "valueThreeFirst", widget: "string"}
+                  - {label: "Rechter waarde — tekst regel 2", name: "valueThreeSecond", widget: "string", required: false}
+
+                  - {label: "Linker collectieblok — titel", name: "wallLights", widget: "string"}
+                  - {label: "Middelste collectieblok — titel", name: "candles", widget: "string"}
+                  - {label: "Rechter collectieblok — titel", name: "vases", widget: "string"}
+                  - {label: "Knoptekst onder de collectieblokken", name: "shopNow", widget: "string"}
+
+                  - label: "Beschrijving van de linker foto"
+                    name: "wallImage"
+                    widget: "string"
+                    hint: "Beschrijf kort wat op de foto staat, voor bezoekers die een schermlezer gebruiken."
+
+                  - {label: "Beschrijving van de middelste foto", name: "candleImage", widget: "string"}
+                  - {label: "Beschrijving van de rechter foto", name: "vaseImage", widget: "string"}
+
+          - label: "Our Story / Over ons"
+            name: "story"
+            widget: "object"
+            collapsed: true
+
+            fields:
+              - label: "Foto bovenaan de pagina"
+                name: "image"
+                widget: "image"
+
+              - label: "Engelse teksten"
+                name: "en"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Paginatitel", name: "page_title", widget: "string"}
+                  - {label: "Titel boven het verhaal", name: "heading", widget: "string"}
+                  - {label: "Eerste alinea", name: "paragraph_one", widget: "text"}
+                  - {label: "Tweede alinea", name: "paragraph_two", widget: "text"}
+
+                  - label: "Beschrijving van de foto"
+                    name: "image_alt"
+                    widget: "string"
+                    required: false
+                    hint: "Mag leeg blijven als de foto alleen decoratief is."
+
+              - label: "Nederlandse teksten"
+                name: "nl"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Paginatitel", name: "page_title", widget: "string"}
+                  - {label: "Titel boven het verhaal", name: "heading", widget: "string"}
+                  - {label: "Eerste alinea", name: "paragraph_one", widget: "text"}
+                  - {label: "Tweede alinea", name: "paragraph_two", widget: "text"}
+
+                  - label: "Beschrijving van de foto"
+                    name: "image_alt"
+                    widget: "string"
+                    required: false
+                    hint: "Mag leeg blijven als de foto alleen decoratief is."
+
+          - label: "Contact"
+            name: "contact"
+            widget: "object"
+            collapsed: true
+
+            fields:
+              - label: "Foto bovenaan de pagina"
+                name: "image"
+                widget: "image"
+
+              - label: "Contact e-mailadres"
+                name: "email"
+                widget: "string"
+                hint: "Hier worden berichten naartoe gestuurd als iemand op de contactknop klikt."
+                pattern:
+                  - '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+                  - "Vul een geldig e-mailadres in."
+
+              - label: "Engelse teksten"
+                name: "en"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Paginatitel", name: "page_title", widget: "string"}
+                  - {label: "Titel boven de contacttekst", name: "heading", widget: "string"}
+                  - {label: "Contacttekst", name: "description", widget: "text"}
+                  - {label: "Tekst van de contactknop", name: "button", widget: "string"}
+
+                  - label: "Beschrijving van de foto"
+                    name: "image_alt"
+                    widget: "string"
+                    required: false
+                    hint: "Mag leeg blijven als de foto alleen decoratief is."
+
+              - label: "Nederlandse teksten"
+                name: "nl"
+                widget: "object"
+                collapsed: true
+
+                fields:
+                  - {label: "Paginatitel", name: "page_title", widget: "string"}
+                  - {label: "Titel boven de contacttekst", name: "heading", widget: "string"}
+                  - {label: "Contacttekst", name: "description", widget: "text"}
+                  - {label: "Tekst van de contactknop", name: "button", widget: "string"}
+
+                  - label: "Beschrijving van de foto"
+                    name: "image_alt"
+                    widget: "string"
+                    required: false
+                    hint: "Mag leeg blijven als de foto alleen decoratief is."
