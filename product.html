@@ -13,6 +13,10 @@
       src: url('fonts/Marseille.ttf') format('truetype');
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       margin: 0;
       background: #fcfbfa;
@@ -99,14 +103,125 @@
       align-items: start;
     }
 
-    .product-photo {
-      width: 100%;
-      max-height: 580px;
-      object-fit: contain;
-      background: white;
+    .product-gallery {
+      min-width: 0;
+    }
+
+    .gallery-frame {
+      position: relative;
+    }
+
+    .gallery-viewport {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
       border: 1px solid #e8e1da;
       border-radius: 8px;
-      box-sizing: border-box;
+      background: white;
+    }
+
+    .gallery-viewport::-webkit-scrollbar {
+      display: none;
+    }
+
+    .gallery-slide {
+      flex: 0 0 100%;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .product-photo {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+    }
+
+    .gallery-error {
+      padding: 25px;
+      text-align: center;
+    }
+
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border: 1px solid #e8e1da;
+      border-radius: 50%;
+      background: rgba(255,255,255,.94);
+      color: #4a4543;
+      font: 32px/1 Arial, sans-serif;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+
+    .gallery-previous {
+      left: 10px;
+    }
+
+    .gallery-next {
+      right: 10px;
+    }
+
+    .gallery-arrow:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .gallery-dots {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-top: 8px;
+    }
+
+    .gallery-dot {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .gallery-dot::before {
+      content: '';
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #d5cbc3;
+    }
+
+    .gallery-dot.active::before {
+      background: #736359;
+    }
+
+    .gallery-dot:focus-visible,
+    .gallery-arrow:focus-visible,
+    .gallery-viewport:focus-visible {
+      outline: 2px solid #736359;
+      outline-offset: 3px;
+    }
+
+    .gallery-counter {
+      margin: 0;
+      text-align: center;
+      color: #7a706b;
+      font-size: .85em;
     }
 
     .product-info h2 {
@@ -141,7 +256,9 @@
       color: #8b4437;
     }
 
-    .stock-message.stock-neutral { color: #7a706b; }
+    .stock-message.stock-neutral {
+      color: #7a706b;
+    }
 
     .shop-button {
       padding: 12px 22px;
@@ -168,13 +285,15 @@
       font-size: .9em;
     }
 
-    @media(max-width: 700px) {
+    @media (max-width: 700px) {
       .product-layout {
         grid-template-columns: 1fr;
         gap: 24px;
       }
 
-      .product-info h2 { font-size: 2em; }
+      .product-info h2 {
+        font-size: 2em;
+      }
     }
   </style>
 </head>
@@ -213,12 +332,14 @@
   <script src="winkelmand.js"></script>
 
   <script>
-    const slug = new URLSearchParams(location.search).get('product');
+    const slug =
+      new URLSearchParams(location.search).get('product');
 
     let product = null;
     let productFailed = false;
     let stockState = 'loading';
     let availableStock = null;
+    let currentPhoto = 0;
 
     function renderStock() {
       const message = document.getElementById('stock-message');
@@ -281,6 +402,283 @@
           );
     }
 
+    function productPhotos() {
+      const extra = Array.isArray(product.extra_images)
+        ? product.extra_images
+        : [];
+
+      const urls = [product.image, ...extra]
+        .map(value => Shop.imageUrl(value))
+        .filter(Boolean);
+
+      return [...new Set(urls)];
+    }
+
+    function createGallery(photos) {
+      const gallery = Shop.element('section', 'product-gallery');
+
+      gallery.setAttribute(
+        'aria-label',
+        Shop.text('Productfoto’s', 'Product photos')
+      );
+
+      gallery.setAttribute(
+        'aria-roledescription',
+        Shop.text('Fotocarrousel', 'Photo carousel')
+      );
+
+      const frame = Shop.element('div', 'gallery-frame');
+      const viewport = Shop.element('div', 'gallery-viewport');
+
+      viewport.id = 'product-photo-viewport';
+
+      viewport.setAttribute(
+        'aria-label',
+        Shop.text(
+          'Veeg om de volgende foto te bekijken',
+          'Swipe to view the next photo'
+        )
+      );
+
+      if (photos.length > 1) viewport.tabIndex = 0;
+
+      const slides = [];
+
+      photos.forEach((url, index) => {
+        const slide = Shop.element('div', 'gallery-slide');
+
+        slide.setAttribute('role', 'group');
+
+        slide.setAttribute(
+          'aria-label',
+          Shop.text(
+            `Foto ${index + 1} van ${photos.length}`,
+            `Photo ${index + 1} of ${photos.length}`
+          )
+        );
+
+        const image = Shop.element('img', 'product-photo');
+
+        image.src = url;
+        image.alt =
+          `${Shop.title(product)} — ` +
+          `${Shop.text('foto', 'photo')} ${index + 1}`;
+
+        image.draggable = false;
+        image.loading = index === 0 ? 'eager' : 'lazy';
+
+        const fallback = Shop.element(
+          'p',
+          'gallery-error',
+          Shop.text(
+            'Deze foto kon niet worden geladen.',
+            'This photo could not be loaded.'
+          )
+        );
+
+        fallback.hidden = true;
+
+        image.addEventListener('error', () => {
+          image.hidden = true;
+          fallback.hidden = false;
+        });
+
+        slide.append(image, fallback);
+        slides.push(slide);
+        viewport.append(slide);
+      });
+
+      frame.append(viewport);
+      gallery.append(frame);
+
+      currentPhoto = Math.max(
+        0,
+        Math.min(currentPhoto, photos.length - 1)
+      );
+
+      if (photos.length === 1) return gallery;
+
+      const previous = Shop.element(
+        'button',
+        'gallery-arrow gallery-previous',
+        '‹'
+      );
+
+      const next = Shop.element(
+        'button',
+        'gallery-arrow gallery-next',
+        '›'
+      );
+
+      previous.type = next.type = 'button';
+
+      previous.setAttribute(
+        'aria-label',
+        Shop.text('Vorige foto', 'Previous photo')
+      );
+
+      next.setAttribute(
+        'aria-label',
+        Shop.text('Volgende foto', 'Next photo')
+      );
+
+      previous.setAttribute('aria-controls', viewport.id);
+      next.setAttribute('aria-controls', viewport.id);
+
+      frame.append(previous, next);
+
+      const dots = Shop.element('div', 'gallery-dots');
+
+      dots.setAttribute('role', 'group');
+
+      dots.setAttribute(
+        'aria-label',
+        Shop.text('Kies een foto', 'Choose a photo')
+      );
+
+      const buttons = [];
+
+      photos.forEach((url, index) => {
+        const dot = Shop.element('button', 'gallery-dot');
+        dot.type = 'button';
+
+        dot.setAttribute(
+          'aria-label',
+          Shop.text(
+            `Bekijk foto ${index + 1} van ${photos.length}`,
+            `View photo ${index + 1} of ${photos.length}`
+          )
+        );
+
+        dot.setAttribute('aria-controls', viewport.id);
+        dot.addEventListener('click', () => goTo(index));
+
+        buttons.push(dot);
+        dots.append(dot);
+      });
+
+      const counter = Shop.element('p', 'gallery-counter');
+
+      counter.setAttribute('aria-live', 'polite');
+      counter.setAttribute('aria-atomic', 'true');
+
+      gallery.append(dots, counter);
+
+      function update(index) {
+        currentPhoto = Math.max(
+          0,
+          Math.min(index, photos.length - 1)
+        );
+
+        buttons.forEach((button, i) => {
+          button.classList.toggle('active', i === currentPhoto);
+
+          if (i === currentPhoto) {
+            button.setAttribute('aria-current', 'true');
+          } else {
+            button.removeAttribute('aria-current');
+          }
+        });
+
+        slides.forEach((slide, i) => {
+          slide.setAttribute(
+            'aria-hidden',
+            String(i !== currentPhoto)
+          );
+        });
+
+        previous.disabled = currentPhoto === 0;
+        next.disabled = currentPhoto === photos.length - 1;
+
+        counter.textContent = Shop.text(
+          `Foto ${currentPhoto + 1} van ${photos.length}`,
+          `Photo ${currentPhoto + 1} of ${photos.length}`
+        );
+      }
+
+      function goTo(index) {
+        const target = Math.max(
+          0,
+          Math.min(index, photos.length - 1)
+        );
+
+        const reduced = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
+
+        viewport.scrollTo({
+          left: target * viewport.clientWidth,
+          behavior: reduced ? 'auto' : 'smooth'
+        });
+
+        update(target);
+      }
+
+      previous.addEventListener('click', () => {
+        goTo(currentPhoto - 1);
+      });
+
+      next.addEventListener('click', () => {
+        goTo(currentPhoto + 1);
+      });
+
+      viewport.addEventListener('keydown', event => {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          goTo(currentPhoto - 1);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          goTo(currentPhoto + 1);
+        }
+      });
+
+      let scrollFrame = null;
+
+      viewport.addEventListener('scroll', () => {
+        if (scrollFrame !== null) return;
+
+        scrollFrame = requestAnimationFrame(() => {
+          scrollFrame = null;
+
+          if (
+            !viewport.isConnected ||
+            !viewport.clientWidth
+          ) {
+            return;
+          }
+
+          update(Math.round(
+            viewport.scrollLeft / viewport.clientWidth
+          ));
+        });
+      }, { passive: true });
+
+      update(currentPhoto);
+
+      requestAnimationFrame(() => {
+        if (viewport.isConnected) {
+          viewport.scrollLeft =
+            currentPhoto * viewport.clientWidth;
+        }
+      });
+
+      if ('ResizeObserver' in window) {
+        const observer = new ResizeObserver(() => {
+          if (!viewport.isConnected) {
+            observer.disconnect();
+            return;
+          }
+
+          viewport.scrollLeft =
+            currentPhoto * viewport.clientWidth;
+        });
+
+        observer.observe(viewport);
+      }
+
+      return gallery;
+    }
+
     function renderProduct() {
       const container = document.getElementById('product-detail');
       container.replaceChildren();
@@ -296,17 +694,13 @@
       }
 
       const layout = Shop.element('div', 'product-layout');
-      const imageUrl = Shop.imageUrl(product.image);
+      const photos = productPhotos();
 
-      if (imageUrl) {
-        const image = Shop.element('img', 'product-photo');
-        image.src = imageUrl;
-        image.alt = Shop.title(product);
-        layout.append(image);
+      if (photos.length) {
+        layout.append(createGallery(photos));
       }
 
       const info = Shop.element('div', 'product-info');
-
       const heading = Shop.element('h2', '', Shop.title(product));
 
       const price = Shop.element(
@@ -345,6 +739,7 @@
       container.append(layout);
 
       document.title = `${Shop.title(product)} - Licht & Liefde`;
+
       renderStock();
     }
 
@@ -380,7 +775,10 @@
       }
     }
 
-    window.addEventListener('site-language-change', renderProduct);
+    window.addEventListener(
+      'site-language-change',
+      renderProduct
+    );
 
     loadProduct();
   </script>
