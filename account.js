@@ -1,5 +1,7 @@
 (() => {
-  const API = 'https://diatheke-account-test.timdekruyf07.workers.dev';
+  const API =
+    'https://diatheke-account-test.timdekruyf07.workers.dev';
+
   const STORAGE_KEY = 'diatheke-account-session-v1';
 
   const messages = {
@@ -102,6 +104,7 @@
         const error = new Error(
           text('Log eerst in.', 'Please sign in first.')
         );
+
         error.status = 401;
         throw error;
       }
@@ -249,4 +252,25 @@
     register: (email, password, token) =>
       authenticate('register', email, password, token)
   };
+
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element
+      ? event.target.closest('#account-button')
+      : null;
+
+    if (!target) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const page = location.pathname.split('/').pop();
+
+    if (page === 'account.html') {
+      document.getElementById('account-heading')
+        ?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    location.href = 'account.html';
+  }, true);
 })();
