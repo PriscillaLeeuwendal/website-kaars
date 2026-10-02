@@ -1,9 +1,12 @@
 (() => {
   const scriptUrl = document.currentScript?.src || location.href;
-  const searchScriptUrl = new URL('zoeken.js', scriptUrl).href;
+  const siteBase = new URL('.', scriptUrl);
+  const searchScriptUrl = new URL('zoeken.js', siteBase).href;
+  const contentUrl = new URL('content/website.json', siteBase).href;
   const key = 'licht-en-liefde-taal';
 
   let saved;
+  let websiteContent = null;
   let dialogReturnFocus = null;
 
   try {
@@ -28,7 +31,7 @@
       add: 'In winkelmand',
       refresh: '🔄 Ververs',
       detail: 'Product',
-      back: '← Terug naar producten',
+      back: '← Terug naar shop',
       notFound: 'Product niet gevonden.'
     },
     en: {
@@ -44,7 +47,7 @@
       add: 'Add to cart',
       refresh: '🔄 Refresh',
       detail: 'Product',
-      back: '← Back to products',
+      back: '← Back to shop',
       notFound: 'Product not found.'
     }
   };
@@ -100,9 +103,294 @@
     }
   };
 
+  const storyWords = {
+    en: {
+      page_title: 'Our Story',
+      heading: 'The story behind Diatheke Atelier',
+      paragraph_one:
+        'Welcome to Diatheke Atelier! We believe a candle can bring more than a cosy atmosphere: it can also bring warmth and hope into your home.',
+      paragraph_two:
+        'Our candles are handmade and feature carefully selected Christian messages and encouraging quotes. Whether you are looking for a meaningful gift or a peaceful moment for yourself, every candle is made with love, especially for you.',
+      image_alt: ''
+    },
+    nl: {
+      page_title: 'Over ons',
+      heading: 'Het verhaal achter Diatheke Atelier',
+      paragraph_one:
+        'Welkom bij Diatheke Atelier! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.',
+      paragraph_two:
+        'Onze kaarsen worden met de hand gemaakt en voorzien van zorgvuldig geselecteerde christelijke teksten en bemoedigende quotes. Of je nu op zoek bent naar een dierbaar cadeau voor iemand die het nodig heeft, of gewoon een sfeervol moment voor jezelf wilt creëren: elk exemplaar wordt met liefde gemaakt, speciaal voor jou.',
+      image_alt: ''
+    }
+  };
+
+  const contactWords = {
+    en: {
+      page_title: 'Contact',
+      heading: 'Questions or orders?',
+      description:
+        'Would you like to order something or request a personal message on a candle? Feel free to get in touch!',
+      button: 'Send a message',
+      image_alt: ''
+    },
+    nl: {
+      page_title: 'Contact',
+      heading: 'Interesse of bestellen?',
+      description:
+        'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!',
+      button: 'Stuur een berichtje',
+      image_alt: ''
+    }
+  };
+
+  function isObject(value) {
+    return value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value);
+  }
+
   function set(selector, text) {
     const element = document.querySelector(selector);
-    if (element) element.textContent = text;
+
+    if (element && typeof text === 'string') {
+      element.textContent = text;
+    }
+  }
+
+  function translatedContent(sectionName, defaults, optional = []) {
+    const result = { ...defaults[language] };
+    const section = websiteContent?.[sectionName];
+
+    if (!isObject(section)) {
+      return result;
+    }
+
+    const content = section[language];
+
+    if (!isObject(content)) {
+      return result;
+    }
+
+    for (const name of Object.keys(result)) {
+      if (typeof content[name] === 'string') {
+        result[name] = content[name];
+      } else if (optional.includes(name)) {
+        result[name] = '';
+      }
+    }
+
+    return result;
+  }
+
+  function imageUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) {
+      return null;
+    }
+
+    try {
+      let path = value.trim();
+
+      // Het beheer slaat foto's op als /images/bestandsnaam.
+      // Op GitHub Pages horen die bij de map van deze website.
+      if (path.startsWith('/images/')) {
+        path = path.slice(1);
+      }
+
+      const url = new URL(path, siteBase);
+      const imagesPath = new URL('images/', siteBase).pathname;
+
+      if (
+        url.origin !== siteBase.origin ||
+        !url.pathname.startsWith(imagesPath)
+      ) {
+        return null;
+      }
+
+      return url.href;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function setImage(selector, value, alt) {
+    const image = document.querySelector(selector);
+
+    if (!image) {
+      return;
+    }
+
+    const url = imageUrl(value);
+
+    if (url) {
+      image.src = url;
+    }
+
+    if (typeof alt === 'string') {
+      image.alt = alt;
+    }
+  }
+
+  function setStoryParagraph(element, text) {
+    if (!element) {
+      return;
+    }
+
+    element.replaceChildren();
+    element.style.whiteSpace = 'pre-line';
+
+    // De merknaam blijft vetgedrukt, zonder HTML uit het
+    // beheerbestand als code uit te voeren.
+    const brand = 'Diatheke Atelier';
+    const position = text.indexOf(brand);
+
+    if (position === -1) {
+      element.textContent = text;
+      return;
+    }
+
+    const strong = document.createElement('strong');
+    strong.textContent = brand;
+
+    element.append(
+      document.createTextNode(text.slice(0, position)),
+      strong,
+      document.createTextNode(text.slice(position + brand.length))
+    );
+  }
+
+  function applyHome() {
+    document.title = 'Diatheke Atelier';
+
+    const content = translatedContent(
+      'home',
+      homeWords,
+      [
+        'valueOneSecond',
+        'valueTwoSecond',
+        'valueThreeSecond'
+      ]
+    );
+
+    document.querySelectorAll('[data-home-text]').forEach(element => {
+      const text = content[element.dataset.homeText];
+
+      if (typeof text === 'string') {
+        element.textContent = text;
+      }
+    });
+
+    document.querySelectorAll('[data-home-alt]').forEach(element => {
+      const text = content[element.dataset.homeAlt];
+
+      if (typeof text === 'string') {
+        element.alt = text;
+      }
+    });
+
+    const home = websiteContent?.home;
+
+    if (isObject(home)) {
+      const hero = document.querySelector('.hero');
+      const background = imageUrl(home.hero_image);
+
+      if (hero && background) {
+        hero.style.backgroundImage =
+          `url(${JSON.stringify(background)})`;
+      }
+
+      setImage(
+        '[data-home-alt="wallImage"]',
+        home.wall_image,
+        content.wallImage
+      );
+
+      setImage(
+        '[data-home-alt="candleImage"]',
+        home.candle_image,
+        content.candleImage
+      );
+
+      setImage(
+        '[data-home-alt="vaseImage"]',
+        home.vase_image,
+        content.vaseImage
+      );
+    }
+
+    document.querySelector('.values')?.setAttribute(
+      'aria-label',
+      language === 'en' ? 'Our values' : 'Onze waarden'
+    );
+
+    document.querySelector('.categories')?.setAttribute(
+      'aria-label',
+      language === 'en'
+        ? 'Explore the collection'
+        : 'Ontdek de collectie'
+    );
+  }
+
+  function applyStory() {
+    const content = translatedContent(
+      'story',
+      storyWords,
+      ['image_alt']
+    );
+
+    document.title = `${content.page_title} - Diatheke Atelier`;
+
+    set('header h1', content.page_title);
+    set('.container h2', content.heading);
+
+    const paragraphs = document.querySelectorAll('.story-copy p');
+
+    setStoryParagraph(paragraphs[0], content.paragraph_one);
+    setStoryParagraph(paragraphs[1], content.paragraph_two);
+
+    setImage(
+      '.story-photo',
+      websiteContent?.story?.image,
+      content.image_alt
+    );
+  }
+
+  function applyContact() {
+    const content = translatedContent(
+      'contact',
+      contactWords,
+      ['image_alt']
+    );
+
+    document.title = `${content.page_title} - Diatheke Atelier`;
+
+    set('header h1', content.page_title);
+    set('.contact-content h2', content.heading);
+    set('.contact-content > p', content.description);
+    set('.contact-content .btn', content.button);
+
+    const description = document.querySelector('.contact-content > p');
+
+    if (description) {
+      description.style.whiteSpace = 'pre-line';
+    }
+
+    setImage(
+      '.contact-photo',
+      websiteContent?.contact?.image,
+      content.image_alt
+    );
+
+    const email = websiteContent?.contact?.email;
+    const button = document.querySelector('.contact-content .btn');
+
+    if (
+      button &&
+      typeof email === 'string' &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
+      !/[\u0000-\u001f\u007f]/.test(email)
+    ) {
+      button.href = 'mailto:' + encodeURIComponent(email.trim());
+    }
   }
 
   function apply() {
@@ -117,32 +405,36 @@
         en ? 'Open shopping cart' : 'Open winkelmand'
       );
 
-      if (cart.hasAttribute('data-icon-cart')) return;
+      if (cart.hasAttribute('data-icon-cart')) {
+        return;
+      }
 
       const textNode = Array.from(cart.childNodes).find(
         node => node.nodeType === Node.TEXT_NODE
       );
 
-      if (textNode) textNode.textContent = t.cart;
+      if (textNode) {
+        textNode.textContent = t.cart;
+      }
     });
 
-    document.querySelectorAll('.main-nav a').forEach((link, i) => {
-      link.textContent = [
+    document.querySelectorAll('.main-nav a').forEach((link, index) => {
+      const labels = [
         t.home,
         t.products,
         t.about,
         t.contact
-      ][i] || link.textContent;
+      ];
+
+      if (labels[index]) {
+        link.textContent = labels[index];
+      }
     });
 
-    const nav = document.querySelector('.main-nav');
-
-    if (nav) {
-      nav.setAttribute(
-        'aria-label',
-        en ? 'Main navigation' : 'Hoofdnavigatie'
-      );
-    }
+    document.querySelector('.main-nav')?.setAttribute(
+      'aria-label',
+      en ? 'Main navigation' : 'Hoofdnavigatie'
+    );
 
     set('footer p', t.footer);
 
@@ -151,55 +443,15 @@
       en ? 'Language: English' : 'Taal: Nederlands'
     );
 
-    const account = document.getElementById('account-button');
-
-    if (account) {
-      account.setAttribute(
-        'aria-label',
-        en ? 'My account' : 'Mijn account'
-      );
-    }
+    document.getElementById('account-button')?.setAttribute(
+      'aria-label',
+      en ? 'My account' : 'Mijn account'
+    );
 
     const page = location.pathname.split('/').pop() || 'index.html';
 
     if (page === 'index.html') {
-      document.title = 'Diatheke Atelier';
-
-      const h = homeWords[language];
-
-      document.querySelectorAll('[data-home-text]').forEach(element => {
-        const text = h[element.dataset.homeText];
-
-        if (typeof text === 'string') {
-          element.textContent = text;
-        }
-      });
-
-      document.querySelectorAll('[data-home-alt]').forEach(element => {
-        const text = h[element.dataset.homeAlt];
-
-        if (typeof text === 'string') {
-          element.alt = text;
-        }
-      });
-
-      const values = document.querySelector('.values');
-
-      if (values) {
-        values.setAttribute(
-          'aria-label',
-          en ? 'Our values' : 'Onze waarden'
-        );
-      }
-
-      const categories = document.querySelector('.categories');
-
-      if (categories) {
-        categories.setAttribute(
-          'aria-label',
-          en ? 'Explore the collection' : 'Ontdek de collectie'
-        );
-      }
+      applyHome();
     }
 
     if (page === 'producten.html') {
@@ -229,58 +481,56 @@
     }
 
     if (page === 'over-ons.html') {
-      document.title = en
-        ? 'Our Story - Diatheke Atelier'
-        : 'Over Ons - Diatheke Atelier';
-
-      set('header h1', en ? 'Our Story' : 'Over Ons');
-
-      set(
-        '.container h2',
-        en
-          ? 'The story behind Diatheke Atelier'
-          : 'Het verhaal achter Diatheke Atelier'
-      );
-
-      const paragraphs = document.querySelectorAll('.container p');
-
-      if (paragraphs[0]) {
-        paragraphs[0].innerHTML = en
-          ? 'Welcome to <strong>Diatheke Atelier</strong>! We believe a candle can bring more than a cosy atmosphere: it can also bring warmth and hope into your home.'
-          : 'Welkom bij <strong>Diatheke Atelier</strong>! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.';
-      }
-
-      if (paragraphs[1]) {
-        paragraphs[1].textContent = en
-          ? 'Our candles are handmade and feature carefully selected Christian messages and encouraging quotes. Whether you are looking for a meaningful gift or a peaceful moment for yourself, every candle is made with love, especially for you.'
-          : 'Onze kaarsen worden met de hand gemaakt en voorzien van zorgvuldig geselecteerde christelijke teksten en bemoedigende quotes. Of je nu op zoek bent naar een dierbaar cadeau voor iemand die het nodig heeft, of gewoon een sfeervol moment voor jezelf wilt creëren: elk exemplaar wordt met liefde gemaakt, speciaal voor jou.';
-      }
+      applyStory();
     }
 
     if (page === 'contact.html') {
-      document.title = 'Contact - Diatheke Atelier';
+      applyContact();
+    }
+  }
 
-      set(
-        '.container h2',
-        en ? 'Questions or orders?' : 'Interesse of bestellen?'
-      );
+  async function loadWebsiteContent() {
+    const page = location.pathname.split('/').pop() || 'index.html';
 
-      set(
-        '.container p',
-        en
-          ? 'Would you like to order something or request a personal message on a candle? Feel free to get in touch!'
-          : 'Wil je graag iets bestellen of heb je een speciale wens voor een eigen tekst op een kaars? Neem gerust contact op!'
-      );
+    if (![
+      'index.html',
+      'over-ons.html',
+      'contact.html'
+    ].includes(page)) {
+      return;
+    }
 
-      set(
-        '.container .btn',
-        en ? 'Send a message' : 'Stuur een berichtje'
+    try {
+      const response = await fetch(contentUrl, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(12000)
+      });
+
+      if (!response.ok) {
+        throw new Error('Website content unavailable');
+      }
+
+      const content = await response.json();
+
+      if (!isObject(content)) {
+        throw new Error('Invalid website content');
+      }
+
+      websiteContent = content;
+      apply();
+    } catch (_) {
+      // Bij een verbindingsprobleem blijven de standaardteksten
+      // en de oorspronkelijke foto's zichtbaar.
+      console.warn(
+        'Website-inhoud kon niet worden geladen. De standaardinhoud wordt gebruikt.'
       );
     }
   }
 
   function choose(value) {
-    if (value !== 'nl' && value !== 'en') return;
+    if (value !== 'nl' && value !== 'en') {
+      return;
+    }
 
     language = value;
 
@@ -354,7 +604,9 @@
         return;
       }
 
-      if (event.key !== 'Tab') return;
+      if (event.key !== 'Tab') {
+        return;
+      }
 
       const first = buttons[0];
       const last = buttons[buttons.length - 1];
@@ -362,7 +614,10 @@
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (
+        !event.shiftKey &&
+        document.activeElement === last
+      ) {
         event.preventDefault();
         first.focus();
       }
@@ -455,6 +710,7 @@
 
   function init() {
     apply();
+    loadWebsiteContent();
 
     document.getElementById('language-button')
       ?.addEventListener('click', dialog);
