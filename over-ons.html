@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Over Ons - Licht & Liefde</title>
 
-    <link rel="preconnect" href="https://app.snipcart.com">
-    <link rel="preconnect" href="https://cdn.snipcart.com">
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 
     <style>
         @font-face {
             font-family: 'Marseille';
             src: url('fonts/Marseille.ttf') format('truetype');
         }
+
         body {
             font-family: Georgia, serif;
             margin: 0;
@@ -22,16 +21,23 @@
             color: #4a4543;
             line-height: 1.6;
         }
+
         header {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/hero-banner.jpg');
+            background-image:
+                linear-gradient(
+                    rgba(0, 0, 0, 0.35),
+                    rgba(0, 0, 0, 0.35)
+                ),
+                url('images/hero-banner.jpg');
             background-size: cover;
             background-position: center;
-            padding: 80px 20px 40px 20px;
+            padding: 80px 20px 40px;
             text-align: center;
             position: relative;
             color: #ffffff;
             border-bottom: 1px solid #e8e1da;
         }
+
         .cart-link {
             position: absolute;
             top: 20px;
@@ -43,14 +49,19 @@
             font-size: 0.85em;
             text-decoration: none;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        .cart-link:hover { background-color: #736359; }
+
+        .cart-link:hover {
+            background-color: #736359;
+        }
+
         header h1 {
             font-family: 'Marseille', Georgia, serif;
             font-size: 3em;
             margin-bottom: 10px;
         }
+
         .main-nav {
             margin-top: 20px;
             display: flex;
@@ -58,6 +69,7 @@
             gap: 15px;
             flex-wrap: wrap;
         }
+
         .main-nav a {
             background-color: rgba(255, 255, 255, 0.2);
             color: white;
@@ -69,14 +81,18 @@
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
-        .main-nav a:hover, .main-nav a.active {
+
+        .main-nav a:hover,
+        .main-nav a.active {
             background-color: rgba(255, 255, 255, 0.4);
         }
+
         .container {
             max-width: 700px;
             margin: 40px auto;
             padding: 0 20px;
         }
+
         h2 {
             font-family: 'Marseille', Georgia, serif;
             font-size: 2.2em;
@@ -84,6 +100,27 @@
             text-align: center;
             margin-bottom: 20px;
         }
+
+        .cart-panel h2 {
+            font-family: Georgia, serif;
+            font-size: 1.5em;
+            text-align: left;
+        }
+
+        .shop-button {
+            background-color: #8c7b70;
+            color: white;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font: 0.95em sans-serif;
+        }
+
+        .shop-button:hover {
+            background-color: #736359;
+        }
+
         footer {
             text-align: center;
             padding: 30px;
@@ -95,10 +132,12 @@
         }
     </style>
 </head>
-<body>
 
+<body>
     <header>
-        <a href="#cart" class="cart-link snipcart-checkout">Winkelmand (<span class="snipcart-items-count">0</span>)</a>
+        <a href="#winkelmand" class="cart-link" data-open-cart>
+            Winkelmand (<span data-cart-count>0</span>)
+        </a>
 
         <h1>Over Ons</h1>
 
@@ -110,18 +149,32 @@
         </nav>
     </header>
 
-    <div class="container">
+    <main class="container">
         <h2>Het verhaal achter Licht & Liefde</h2>
-        <p>Welkom bij <strong>Licht & Liefde</strong>! Wij geloven dat een brandende kaars niet alleen gezelligheid brengt, maar ook warmte en hoop in huis kan verspreiden.</p>
-        <p>Onze kaarsen worden met de hand gemaakt en voorzien van zorgvuldig geselecteerde christelijke teksten en bemoedigende quotes. Of je nu op zoek bent naar een dierbaar cadeau voor iemand die het nodig heeft, of gewoon een sfeervol moment voor jezelf wilt creëren: elk exemplaar wordt met liefde gemaakt, speciaal voor jou.</p>
-    </div>
+
+        <p>
+            Welkom bij <strong>Licht & Liefde</strong>!
+            Wij geloven dat een brandende kaars niet alleen
+            gezelligheid brengt, maar ook warmte en hoop in
+            huis kan verspreiden.
+        </p>
+
+        <p>
+            Onze kaarsen worden met de hand gemaakt en voorzien
+            van zorgvuldig geselecteerde christelijke teksten
+            en bemoedigende quotes. Of je nu op zoek bent naar
+            een dierbaar cadeau voor iemand die het nodig heeft,
+            of gewoon een sfeervol moment voor jezelf wilt
+            creëren: elk exemplaar wordt met liefde gemaakt,
+            speciaal voor jou.
+        </p>
+    </main>
 
     <footer>
         <p>&copy; 2026 Licht & Liefde - Handgemaakt met zorg.</p>
     </footer>
 
-    <script async src="https://cdn.snipcart.com/themes/v3.2.1/default/snipcart.js"></script>
-    <div hidden id="snipcart" data-api-key="NDdkMmZjYjAtYTI2NS00NDQ0LWFjYjgtMWNlMmVhNzgzZTMzNjM5MjQwNDE5ODk1NTAxNjE2"></div>
     <script src="taal.js"></script>
+    <script src="winkelmand.js"></script>
 </body>
 </html>
