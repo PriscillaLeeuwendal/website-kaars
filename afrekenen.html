@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Afrekenen - Licht & Liefde</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+  <style>
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      background: #fcfbfa;
+      color: #4a4543;
+      font: 16px/1.6 Georgia, serif;
+    }
+
+    header {
+      padding: 35px 20px;
+      background: #8c7b70;
+      color: white;
+      text-align: center;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    a { color: #736359; }
+    h1 { margin: 0; }
+
+    .box {
+      padding: 25px;
+      margin: 20px 0;
+      background: white;
+      border: 1px solid #e8e1da;
+      border-radius: 8px;
+    }
+
+    .test {
+      padding: 12px 16px;
+      background: #f4efe9;
+      border-radius: 6px;
+    }
+
+    fieldset {
+      padding: 0;
+      margin: 0;
+      border: 0;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label { display: block; }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 11px;
+      margin-top: 5px;
+      border: 1px solid #cfc5bd;
+      border-radius: 4px;
+      font: inherit;
+    }
+
+    .wide { grid-column: 1 / -1; }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e8e1da;
+    }
+
+    button,
+    .shop-button {
+      display: inline-block;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 4px;
+      background: #8c7b70;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    #message {
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    #continue { margin-top: 15px; }
+
+    footer {
+      padding: 25px;
+      text-align: center;
+      background: #f4efe9;
+      color: #7a706b;
+    }
+
+    @media (max-width: 600px) {
+      .fields { grid-template-columns: 1fr; }
+      .wide { grid-column: auto; }
+      .box { padding: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1 id="heading">Afrekenen</h1>
+  </header>
+
+  <main>
+    <a href="producten.html" id="back">← Terug naar producten</a>
+
+    <p class="test" id="test-note"></p>
+
+    <section class="box">
+      <h2 id="summary-title">Je bestelling</h2>
+      <div id="summary" aria-live="polite"></div>
+    </section>
+
+    <section class="box">
+      <h2 id="address-title">Afleveradres</h2>
+
+      <form id="checkout-form">
+        <fieldset id="customer-fields" disabled>
+          <div class="fields">
+            <label>
+              <span data-label="first_name"></span>
+              <input
+                name="first_name"
+                autocomplete="given-name"
+                maxlength="80"
+                required
+              >
+            </label>
+
+            <label>
+              <span data-label="last_name"></span>
+              <input
+                name="last_name"
+                autocomplete="family-name"
+                maxlength="100"
+                required
+              >
+            </label>
+
+            <label class="wide">
+              <span data-label="email"></span>
+              <input
+                name="email"
+                type="email"
+                autocomplete="email"
+                maxlength="254"
+                required
+              >
+            </label>
+
+            <label>
+              <span data-label="street"></span>
+              <input
+                name="street"
+                autocomplete="address-line1"
+                maxlength="150"
+                required
+              >
+            </label>
+
+            <label>
+              <span data-label="house_number"></span>
+              <input
+                name="house_number"
+                autocomplete="address-line2"
+                maxlength="30"
+                required
+              >
+            </label>
+
+            <label>
+              <span data-label="postal_code"></span>
+              <input
+                name="postal_code"
+                autocomplete="postal-code"
+                maxlength="12"
+                required
+              >
+            </label>
+
+            <label>
+              <span data-label="city"></span>
+              <input
+                name="city"
+                autocomplete="address-level2"
+                maxlength="100"
+                required
+              >
+            </label>
+          </div>
+
+          <p id="country-note"></p>
+        </fieldset>
+
+        <button id="pay" type="submit" disabled></button>
+      </form>
+
+      <p id="message" role="status" aria-live="polite"></p>
+
+      <a id="continue" class="shop-button" hidden></a>
+
+      <button id="restart" type="button" hidden></button>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Licht & Liefde - Handgemaakt met zorg.</p>
+  </footer>
+
+  <script src="taal.js"></script>
+  <script src="winkelmand.js"></script>
+
+  <script>
+    const ATTEMPT_KEY = 'licht-en-liefde-checkout-v1';
+
+    const form = document.getElementById('checkout-form');
+    const fields = document.getElementById('customer-fields');
+    const pay = document.getElementById('pay');
+    const message = document.getElementById('message');
+    const continueLink = document.getElementById('continue');
+    const restart = document.getElementById('restart');
+
+    let attempt = null;
+    let items = [];
+    let products = [];
+    let expectedTotal = 0;
+    let ready = false;
+    let busy = false;
+    let terminal = false;
+    let storageError = false;
+
+    try {
+      attempt = JSON.parse(
+        sessionStorage.getItem(ATTEMPT_KEY) || 'null'
+      );
+    } catch (_) {
+      storageError = true;
+    }
+
+    if (
+      attempt &&
+      (
+        !Array.isArray(attempt.items) ||
+        !attempt.customer ||
+        !/^[a-f0-9]{64}$/.test(attempt.checkout_key || '')
+      )
+    ) {
+      storageError = true;
+      attempt = null;
+    }
+
+    function translate() {
+      document.title = Shop.text(
+        'Afrekenen - Licht & Liefde',
+        'Checkout - Licht & Liefde'
+      );
+
+      document.getElementById('heading').textContent =
+        Shop.text('Afrekenen', 'Checkout');
+
+      document.getElementById('back').textContent =
+        Shop.text('← Terug naar producten', '← Back to products');
+
+      document.getElementById('test-note').textContent =
+        Shop.text(
+          'Testmodus: er wordt geen echt geld afgeschreven. Verzending is voorlopig alleen binnen Nederland.',
+          'Test mode: no real money is charged. Shipping is currently available only within the Netherlands.'
+        );
+
+      document.getElementById('summary-title').textContent =
+        Shop.text('Je bestelling', 'Your order');
+
+      document.getElementById('address-title').textContent =
+        Shop.text('Afleveradres', 'Shipping address');
+
+      document.getElementById('country-note').textContent =
+        Shop.text('Land: Nederland', 'Country: Netherlands');
+
+      const labels = {
+        first_name: ['Voornaam', 'First name'],
+        last_name: ['Achternaam', 'Last name'],
+        email: ['E-mailadres', 'Email address'],
+        street: ['Straat', 'Street'],
+        house_number: ['Huisnummer en toevoeging', 'House number'],
+        postal_code: ['Postcode', 'Postal code'],
+        city: ['Plaats', 'City']
+      };
+
+      document.querySelectorAll('[data-label]').forEach(node => {
+        node.textContent = Shop.text(...labels[node.dataset.label]);
+      });
+
+      pay.textContent = busy
+        ? Shop.text(
+            'Betaling wordt voorbereid...',
+            'Preparing payment...'
+          )
+        : attempt
+          ? Shop.text(
+              'Hervat deze testbestelling',
+              'Resume this test order'
+            )
+          : Shop.text(
+              'Naar Mollie — testbetaling',
+              'Continue to Mollie — test payment'
+            );
+
+      continueLink.textContent =
+        Shop.text('Doorgaan naar Mollie', 'Continue to Mollie');
+
+      restart.textContent =
+        Shop.text('Begin een nieuwe bestelling', 'Start a new order');
+
+      if (ready) renderSummary();
+    }
+
+    function renderSummary() {
+      const summary = document.getElementById('summary');
+      summary.replaceChildren();
+
+      let subtotal = 0;
+
+      products.forEach((product, index) => {
+        const quantity = items[index].quantity;
+        const row = Shop.element('div', 'line');
+
+        row.append(
+          Shop.element(
+            'span',
+            '',
+            `${quantity} × ${Shop.title(product)}`
+          ),
+          Shop.element(
+            'span',
+            '',
+            Shop.money(product.cents * quantity)
+          )
+        );
+
+        summary.append(row);
+        subtotal += product.cents * quantity;
+      });
+
+      expectedTotal = subtotal + 795;
+
+      summary.append(
+        Shop.element(
+          'p',
+          '',
+          `${Shop.text('Verzending', 'Shipping')}: ${Shop.money(795)}`
+        ),
+        Shop.element(
+          'strong',
+          '',
+          `${Shop.text('Totaal', 'Total')}: ${Shop.money(expectedTotal)}`
+        )
+      );
+    }
+
+    function saveAttempt() {
+      sessionStorage.setItem(
+        ATTEMPT_KEY,
+        JSON.stringify(attempt)
+      );
+    }
+
+    function paymentPage(orderId) {
+      return (
+        'betaling.html?order=' +
+        encodeURIComponent(orderId) +
+        '&key=' +
+        attempt.checkout_key
+      );
+    }
+
+    async function load() {
+      translate();
+
+      if (storageError) {
+        message.textContent = Shop.text(
+          'Je browser kan de bestelgegevens niet veilig bewaren. Sta websiteopslag toe voordat je afrekent.',
+          'Allow website storage before checking out.'
+        );
+        return;
+      }
+
+      items = attempt ? attempt.items : Shop.snapshot();
+
+      if (!items.length) {
+        document.getElementById('summary').textContent =
+          Shop.text('Je winkelmand is leeg.', 'Your cart is empty.');
+        return;
+      }
+
+      if (attempt) {
+        for (
+          const [name, value] of Object.entries(attempt.customer)
+        ) {
+          const input = form.elements.namedItem(name);
+          if (input) input.value = value;
+        }
+
+        message.textContent = Shop.text(
+          'Er is al een bestelling gestart. Hervat die met dezelfde gegevens om een dubbele bestelling te voorkomen.',
+          'An order has already been started. Resume it with the same details to avoid a duplicate order.'
+        );
+      }
+
+      try {
+        products = await Promise.all(
+          items.map(item => {
+            return Shop.getProduct(item.product_id, true);
+          })
+        );
+
+        ready = true;
+        renderSummary();
+        fields.disabled = Boolean(attempt);
+        pay.disabled = false;
+      } catch (_) {
+        document.getElementById('summary').textContent =
+          Shop.text(
+            'De producten konden niet worden geladen. Ververs deze pagina om het opnieuw te proberen.',
+            'Products could not be loaded. Refresh this page to try again.'
+          );
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+
+      if (!ready || busy || terminal) return;
+
+      busy = true;
+      pay.disabled = true;
+      continueLink.hidden = true;
+      message.textContent = '';
+      translate();
+
+      try {
+        if (!attempt) {
+          if (
+            JSON.stringify(Shop.snapshot()) !==
+            JSON.stringify(items)
+          ) {
+            throw new Error(Shop.text(
+              'Je winkelmand is veranderd. Ververs deze pagina voordat je afrekent.',
+              'Your cart has changed. Refresh this page before checking out.'
+            ));
+          }
+
+          const customer = { country: 'NL' };
+
+          const names = [
+            'first_name',
+            'last_name',
+            'email',
+            'street',
+            'house_number',
+            'postal_code',
+            'city'
+          ];
+
+          for (const name of names) {
+            customer[name] =
+              form.elements.namedItem(name).value.trim();
+          }
+
+          const random =
+            crypto.getRandomValues(new Uint8Array(32));
+
+          attempt = {
+            checkout_key: [...random]
+              .map(byte => byte.toString(16).padStart(2, '0'))
+              .join(''),
+            items,
+            customer,
+            language: window.siteLanguage.get()
+          };
+        }
+
+        saveAttempt();
+        fields.disabled = true;
+
+        const response = await fetch(
+          Shop.API + '/checkout',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(attempt),
+            signal: AbortSignal.timeout(45000)
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (
+            response.status === 409 &&
+            data.error ===
+              'Er is onvoldoende voorraad. Pas je winkelmand aan.'
+          ) {
+            sessionStorage.removeItem(ATTEMPT_KEY);
+            attempt = null;
+            fields.disabled = false;
+
+            throw new Error(Shop.text(
+              data.error,
+              'There is insufficient stock. Update your cart.'
+            ));
+          }
+
+          throw new Error(Shop.text(
+            data.error || 'Afrekenen is mislukt.',
+            'The payment could not be started. Retry the same order.'
+          ));
+        }
+
+        if (data.mode !== 'test' || !data.order_id) {
+          throw new Error(Shop.text(
+            'Onverwacht antwoord. Probeer dezelfde bestelling opnieuw.',
+            'Unexpected response. Retry the same order.'
+          ));
+        }
+
+        attempt.order_id = data.order_id;
+        saveAttempt();
+
+        if (data.status === 'paid') {
+          location.href = paymentPage(data.order_id);
+          return;
+        }
+
+        if (
+          ['canceled', 'expired', 'failed'].includes(data.status)
+        ) {
+          terminal = true;
+          restart.hidden = false;
+
+          message.textContent = Shop.text(
+            'Deze betaling is beëindigd zonder geslaagde betaling. Je kunt een nieuwe bestelling starten.',
+            'This payment ended without success. You can start a new order.'
+          );
+          return;
+        }
+
+        if (
+          data.status !== 'pending' ||
+          !data.checkout_url
+        ) {
+          throw new Error(Shop.text(
+            'De bestelling wordt nog gecontroleerd. Hervat dezelfde bestelling.',
+            'The order is still being checked. Resume the same order.'
+          ));
+        }
+
+        const url = new URL(data.checkout_url);
+
+        if (
+          url.protocol !== 'https:' ||
+          !(
+            url.hostname === 'mollie.com' ||
+            url.hostname.endsWith('.mollie.com')
+          )
+        ) {
+          throw new Error('Ongeldige betaallink');
+        }
+
+        if (data.total_cents !== expectedTotal) {
+          continueLink.href = url.href;
+          continueLink.hidden = false;
+
+          message.textContent = Shop.text(
+            `De actuele prijzen zijn gewijzigd. Het bevestigde totaal inclusief verzending is ${Shop.money(data.total_cents)}. Controleer dit bedrag voordat je doorgaat.`,
+            `Current prices have changed. The confirmed total including shipping is ${Shop.money(data.total_cents)}. Check this amount before continuing.`
+          );
+        } else {
+          location.href = url.href;
+        }
+      } catch (error) {
+        message.textContent =
+          error.name === 'TimeoutError' ||
+          error.name === 'AbortError'
+            ? Shop.text(
+                'De verbinding duurde te lang. Hervat dezelfde bestelling; je gegevens zijn bewaard.',
+                'The connection timed out. Resume the same order; your details have been kept.'
+              )
+            : error.message;
+      } finally {
+        busy = false;
+        pay.disabled = terminal;
+        translate();
+      }
+    });
+
+    restart.addEventListener('click', () => {
+      try {
+        sessionStorage.removeItem(ATTEMPT_KEY);
+        location.reload();
+      } catch (_) {
+        message.textContent = Shop.text(
+          'Bestelgegevens konden niet worden gewist.',
+          'Could not clear order details.'
+        );
+      }
+    });
+
+    window.addEventListener('site-language-change', translate);
+
+    load();
+  </script>
+</body>
+</html>
