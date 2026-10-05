@@ -5,6 +5,18 @@
   const contentUrl = new URL('content/website.json', siteBase).href;
   const key = 'licht-en-liefde-taal';
 
+  if (!document.getElementById('website-status-script')) {
+    const statusScript = document.createElement('script');
+
+    statusScript.id = 'website-status-script';
+    statusScript.src = new URL(
+      'website-status.js',
+      siteBase
+    ).href;
+
+    document.head.appendChild(statusScript);
+  }
+
   let saved;
   let websiteContent = null;
   let dialogReturnFocus = null;
@@ -190,8 +202,6 @@
     try {
       let path = value.trim();
 
-      // Het beheer slaat foto's op als /images/bestandsnaam.
-      // Op GitHub Pages horen die bij de map van deze website.
       if (path.startsWith('/images/')) {
         path = path.slice(1);
       }
@@ -238,8 +248,6 @@
     element.replaceChildren();
     element.style.whiteSpace = 'pre-line';
 
-    // De merknaam blijft vetgedrukt, zonder HTML uit het
-    // beheerbestand als code uit te voeren.
     const brand = 'Diatheke Atelier';
     const position = text.indexOf(brand);
 
@@ -519,8 +527,6 @@
       websiteContent = content;
       apply();
     } catch (_) {
-      // Bij een verbindingsprobleem blijven de standaardteksten
-      // en de oorspronkelijke foto's zichtbaar.
       console.warn(
         'Website-inhoud kon niet worden geladen. De standaardinhoud wordt gebruikt.'
       );
@@ -705,6 +711,7 @@
   window.siteLanguage = {
     get: () => language,
     text: name => words[language][name],
+    set: choose,
     apply
   };
 
