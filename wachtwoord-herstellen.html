@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Reset password - Diatheke Atelier</title>
+
+  <script>
+    const resetParams = new URLSearchParams(
+      location.hash.slice(1)
+    );
+
+    let resetToken = resetParams.get('token') || '';
+    const resetLanguage = resetParams.get('lang');
+
+    history.replaceState(
+      null,
+      '',
+      location.pathname
+    );
+  </script>
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+
+    body {
+      margin: 0;
+      background: #faf7f2;
+      color: #3d3024;
+      font: 16px/1.6 Georgia, serif;
+    }
+
+    main {
+      max-width: 520px;
+      margin: 50px auto;
+      padding: 25px;
+    }
+
+    .brand {
+      color: #a67c48;
+      letter-spacing: 3px;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin: 20px 0;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 6px;
+      font: inherit;
+      border: 1px solid #d7c5ae;
+    }
+
+    button {
+      padding: 12px 18px;
+      background: #a67c48;
+      color: white;
+      border: 0;
+      border-radius: 3px;
+      cursor: pointer;
+      font: 14px Arial, sans-serif;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    button:focus-visible {
+      outline: 2px solid #3d3024;
+      outline-offset: 3px;
+    }
+
+    a {
+      color: #80603b;
+    }
+
+    #message {
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    #security {
+      margin: 20px 0;
+      min-height: 65px;
+    }
+
+    .languages {
+      display: flex;
+      gap: 8px;
+      margin-top: 25px;
+    }
+
+    .languages button {
+      background: transparent;
+      color: #80603b;
+      border: 1px solid #d7c5ae;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <p class="brand">DIATHĒKĒ ATELIER</p>
+
+    <h1 id="heading"></h1>
+    <p id="description"></p>
+
+    <form id="reset-form" hidden>
+      <label>
+        <span id="password-label"></span>
+
+        <input
+          id="new-password"
+          type="password"
+          autocomplete="new-password"
+          minlength="15"
+          maxlength="128"
+          required
+        >
+      </label>
+
+      <label>
+        <span id="confirmation-label"></span>
+
+        <input
+          id="confirmation"
+          type="password"
+          autocomplete="new-password"
+          minlength="15"
+          maxlength="128"
+          required
+        >
+      </label>
+
+      <p id="hint"></p>
+
+      <div id="security"></div>
+
+      <button
+        id="submit"
+        type="submit"
+        disabled
+      ></button>
+    </form>
+
+    <p
+      id="message"
+      role="status"
+      aria-live="polite"
+    ></p>
+
+    <p>
+      <a id="back" href="account.html"></a>
+    </p>
+
+    <div class="languages">
+      <button type="button" data-lang="en">
+        English
+      </button>
+
+      <button type="button" data-lang="nl">
+        Nederlands
+      </button>
+    </div>
+  </main>
+
+  <script>
+    let language = resetLanguage === 'nl'
+      ? 'nl'
+      : resetLanguage === 'en'
+        ? 'en'
+        : null;
+
+    if (!language) {
+      try {
+        language = localStorage.getItem(
+          'licht-en-liefde-taal'
+        ) === 'nl' ? 'nl' : 'en';
+      } catch (_) {
+        language = 'en';
+      }
+    }
+
+    window.siteLanguage = {
+      get: () => language
+    };
+  </script>
+
+  <script src="account.js"></script>
+
+  <script>
+    const A = window.CustomerAccount;
+
+    const form = document.getElementById('reset-form');
+    const submit = document.getElementById('submit');
+    const message = document.getElementById('message');
+
+    let busy = false;
+    let securityToken = '';
+    let widgetId = null;
+    let complete = false;
+
+    let invalid = !/^[a-f0-9]{64}$/.test(resetToken);
+
+    function set(id, nl, en) {
+      document.getElementById(id).textContent =
+        A.text(nl, en);
+    }
+
+    function render() {
+      document.documentElement.lang = language;
+
+      document.title = A.text(
+        'Wachtwoord herstellen - Diatheke Atelier',
+        'Reset password - Diatheke Atelier'
+      );
+
+      set(
+        'heading',
+        complete
+          ? 'Wachtwoord gewijzigd'
+          : 'Wachtwoord herstellen',
+        complete
+          ? 'Password changed'
+          : 'Reset password'
+      );
+
+      set(
+        'description',
+        complete
+          ? 'Je kunt nu inloggen met je nieuwe wachtwoord. Je eerdere inlogsessies zijn beëindigd.'
+          : 'Kies een nieuw wachtwoord voor je account.',
+        complete
+          ? 'You can now sign in with your new password. Your previous sessions have ended.'
+          : 'Choose a new password for your account.'
+      );
+
+      set(
+        'password-label',
+        'Nieuw wachtwoord',
+        'New password'
+      );
+
+      set(
+        'confirmation-label',
+        'Herhaal nieuw wachtwoord',
+        'Confirm new password'
+      );
+
+      set(
+        'hint',
+        'Gebruik minimaal 15 tekens.',
+        'Use at least 15 characters.'
+      );
+
+      set(
+        'submit',
+        busy ? 'Even wachten…' : 'Wachtwoord opslaan',
+        busy ? 'Please wait…' : 'Save password'
+      );
+
+      set(
+        'back',
+        'Naar inloggen of een nieuwe herstellink aanvragen',
+        'Sign in or request a new reset link'
+      );
+
+      form.hidden = invalid || complete;
+
+      submit.disabled =
+        busy || !securityToken || invalid || complete;
+
+      document.getElementById('new-password').disabled =
+        busy;
+
+      document.getElementById('confirmation').disabled =
+        busy;
+
+      if (invalid) {
+        message.textContent = A.text(
+          'Deze link is ongeldig, verlopen of al gebruikt. Vraag een nieuwe link aan via je account.',
+          'This link is invalid, expired or already used. Request a new link from your account.'
+        );
+      }
+    }
+
+    document.querySelectorAll('[data-lang]')
+      .forEach(button => {
+        button.addEventListener('click', () => {
+          language = button.dataset.lang;
+
+          try {
+            localStorage.setItem(
+              'licht-en-liefde-taal',
+              language
+            );
+          } catch (_) {}
+
+          render();
+        });
+      });
+
+    async function prepareSecurity() {
+      if (invalid) return;
+
+      try {
+        const config = await A.config();
+
+        if (!config.turnstile_site_key) {
+          throw new Error(A.text(
+            'De beveiligingscontrole ontbreekt.',
+            'The security check is unavailable.'
+          ));
+        }
+
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+
+          script.src =
+            'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+
+          script.onload = resolve;
+
+          script.onerror = () => reject(new Error(A.text(
+            'De beveiligingscontrole kon niet worden geladen.',
+            'The security check could not be loaded.'
+          )));
+
+          document.head.appendChild(script);
+        });
+
+        widgetId = window.turnstile.render(
+          '#security',
+          {
+            sitekey: config.turnstile_site_key,
+            action: 'account',
+            theme: 'light',
+
+            callback: token => {
+              securityToken = token;
+              render();
+            },
+
+            'expired-callback': () => {
+              securityToken = '';
+              render();
+            },
+
+            'error-callback': () => {
+              securityToken = '';
+
+              message.textContent = A.text(
+                'De beveiligingscontrole is mislukt. Open de link uit je mail opnieuw.',
+                'The security check failed. Open the link from your email again.'
+              );
+
+              render();
+            }
+          }
+        );
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+
+      if (
+        busy ||
+        !securityToken ||
+        invalid ||
+        complete
+      ) {
+        return;
+      }
+
+      const password = document.getElementById(
+        'new-password'
+      ).value;
+
+      const confirmation = document.getElementById(
+        'confirmation'
+      ).value;
+
+      if (password !== confirmation) {
+        message.textContent = A.text(
+          'De wachtwoorden zijn niet hetzelfde.',
+          'The passwords do not match.'
+        );
+
+        return;
+      }
+
+      busy = true;
+      message.textContent = '';
+      render();
+
+      try {
+        await A.resetPassword(
+          resetToken,
+          password,
+          confirmation,
+          securityToken
+        );
+
+        complete = true;
+        resetToken = '';
+        form.reset();
+      } catch (error) {
+        invalid = error.code === 'RESET_INVALID';
+        message.textContent = error.message;
+      } finally {
+        busy = false;
+        securityToken = '';
+
+        if (
+          !complete &&
+          !invalid &&
+          widgetId !== null
+        ) {
+          window.turnstile.reset(widgetId);
+        }
+
+        render();
+      }
+    });
+
+    render();
+    prepareSecurity();
+  </script>
+</body>
+</html>
