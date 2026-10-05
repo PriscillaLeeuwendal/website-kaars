@@ -17,9 +17,13 @@
       'Gebruik een wachtwoord van minimaal 15 tekens.',
       'Use a password of at least 15 characters.'
     ],
+    PASSWORD_MISMATCH: [
+      'De wachtwoorden zijn niet hetzelfde.',
+      'The passwords do not match.'
+    ],
     TOO_MANY_ATTEMPTS: [
-      'Te veel pogingen. Wacht maximaal 10 minuten en probeer opnieuw.',
-      'Too many attempts. Wait up to 10 minutes and try again.'
+      'Te veel pogingen. Probeer later opnieuw; voor herstelmails geldt maximaal 3 aanvragen per uur.',
+      'Too many attempts. Try again later; reset emails are limited to 3 requests per hour.'
     ],
     SECURITY_CHECK_REQUIRED: [
       'Voer de beveiligingscontrole uit.',
@@ -52,6 +56,14 @@
     INVALID_ADDRESS: [
       'Controleer of alle adresgegevens, de Nederlandse postcode en het huisnummer correct zijn ingevuld.',
       'Check all address details, the Dutch postal code and the house number.'
+    ],
+    RESET_INVALID: [
+      'Deze herstellink is ongeldig, verlopen of al gebruikt. Vraag een nieuwe link aan.',
+      'This reset link is invalid, expired or already used. Request a new link.'
+    ],
+    RESET_UNAVAILABLE: [
+      'Wachtwoordherstel is tijdelijk niet beschikbaar. Probeer later opnieuw.',
+      'Password recovery is temporarily unavailable. Please try again later.'
     ],
     ACCOUNT_UNAVAILABLE: [
       'De accountfunctie is tijdelijk niet beschikbaar. Probeer opnieuw.',
@@ -86,8 +98,13 @@
   }
 
   function clearSession() {
-    sessionStorage.removeItem(STORAGE_KEY);
-    window.dispatchEvent(new Event('customer-account-change'));
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
+
+    window.dispatchEvent(
+      new Event('customer-account-change')
+    );
   }
 
   async function request(path, options = {}) {
@@ -123,6 +140,7 @@
           ? undefined
           : JSON.stringify(options.body),
         cache: 'no-store',
+        credentials: 'omit',
         signal: AbortSignal.timeout(30000)
       });
 
@@ -136,9 +154,7 @@
 
     if (!response.ok) {
       if (options.auth && response.status === 401) {
-        try {
-          clearSession();
-        } catch (_) {}
+        clearSession();
       }
 
       const translated = messages[data.code];
@@ -154,13 +170,19 @@
 
       error.status = response.status;
       error.code = data.code;
+
       throw error;
     }
 
     return data;
   }
 
-  async function authenticate(mode, email, password, turnstileToken) {
+  async function authenticate(
+    mode,
+    email,
+    password,
+    turnstileToken
+  ) {
     const data = await request('/auth/' + mode, {
       method: 'POST',
       body: {
@@ -182,10 +204,13 @@
     }
 
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        token: data.token,
-        expires_at: data.expires_at
-      }));
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          token: data.token,
+          expires_at: data.expires_at
+        })
+      );
     } catch (_) {
       try {
         await fetch(API + '/auth/logout', {
@@ -203,14 +228,20 @@
       ));
     }
 
-    window.dispatchEvent(new Event('customer-account-change'));
+    window.dispatchEvent(
+      new Event('customer-account-change')
+    );
+
     return data.account;
   }
 
   async function getAccount() {
     if (!getToken()) return null;
 
-    const data = await request('/auth/me', { auth: true });
+    const data = await request('/auth/me', {
+      auth: true
+    });
+
     return data.account;
   }
 
@@ -221,7 +252,10 @@
       body: { address }
     });
 
-    window.dispatchEvent(new Event('customer-account-change'));
+    window.dispatchEvent(
+      new Event('customer-account-change')
+    );
+
     return data.account;
   }
 
@@ -240,11 +274,48 @@
     clearSession();
   }
 
+  async function requestPasswordReset(email, token) {
+    return request('/auth/request-password-reset', {
+      method: 'POST',
+      body: {
+        email,
+        turnstile_token: token,
+        language:
+          window.siteLanguage?.get() === 'nl'
+            ? 'nl'
+            : 'en'
+      }
+    });
+  }
+
+  async function resetPassword(
+    token,
+    password,
+    confirmation,
+    turnstileToken
+  ) {
+    const result = await request('/auth/reset-password', {
+      method: 'POST',
+      body: {
+        token,
+        password,
+        password_confirmation: confirmation,
+        turnstile_token: turnstileToken
+      }
+    });
+
+    clearSession();
+
+    return result;
+  }
+
   window.CustomerAccount = {
     text,
     getAccount,
     saveAddress,
     logout,
+    requestPasswordReset,
+    resetPassword,
     hasSession: () => Boolean(getToken()),
     config: () => request('/auth/config'),
     login: (email, password, token) =>
@@ -268,6 +339,7 @@
     if (page === 'account.html') {
       document.getElementById('account-heading')
         ?.scrollIntoView({ behavior: 'smooth' });
+
       return;
     }
 
