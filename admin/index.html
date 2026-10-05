@@ -2,33 +2,322 @@
 <html lang="nl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beheerscherm</title>
 
   <style>
-    .voorraad-link {
+    #website-beheer {
       position: fixed;
       bottom: 20px;
       right: 20px;
       z-index: 10000;
-      padding: 12px 18px;
-      background: #736359;
-      color: white;
+      box-sizing: border-box;
+      width: min(360px, calc(100vw - 40px));
+      padding: 18px;
+      border: 1px solid #d7c5ae;
       border-radius: 8px;
-      text-decoration: none;
-      font: 14px Arial, sans-serif;
+      background: #faf7f2;
+      color: #3d3024;
       box-shadow: 0 3px 12px rgba(0, 0, 0, .2);
+      font: 14px/1.5 Arial, sans-serif;
+      max-height: calc(100dvh - 40px);
+      overflow: auto;
     }
 
-    .voorraad-link:hover {
+    #website-beheer summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #website-beheer label {
+      display: block;
+      margin-top: 12px;
+    }
+
+    #website-beheer input {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 6px 0;
+      padding: 10px;
+      border: 1px solid #c7b8a6;
+      border-radius: 4px;
+      font: inherit;
+    }
+
+    #website-beheer button,
+    #website-beheer .voorraad-link {
+      display: inline-block;
+      padding: 10px 12px;
+      margin: 4px 0;
+      border: 0;
+      border-radius: 4px;
+      background: #736359;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    #website-beheer button:hover,
+    #website-beheer .voorraad-link:hover {
       background: #594c44;
+    }
+
+    #website-beheer button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #website-beheer button:focus-visible {
+      outline: 2px solid #3d3024;
+      outline-offset: 3px;
+    }
+
+    #website-beheer .website-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #website-beheer #website-open {
+      background: #45694b;
+    }
+
+    #website-beheer #website-close {
+      background: #8b4437;
+    }
+
+    #website-status {
+      font-weight: bold;
+    }
+
+    #website-result {
+      overflow-wrap: anywhere;
     }
   </style>
 </head>
+
 <body>
-  <a class="voorraad-link" href="voorraad.html">
-    Voorraad beheren
-  </a>
+  <details id="website-beheer">
+    <summary>Website en voorraad beheren</summary>
+
+    <p id="website-status" role="status">
+      Status wordt opgehaald…
+    </p>
+
+    <form id="website-login">
+      <label for="website-password">
+        Voorraadbeheerwachtwoord
+      </label>
+
+      <input
+        id="website-password"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button id="website-unlock" type="submit">
+        Bediening ontgrendelen
+      </button>
+    </form>
+
+    <div class="website-buttons">
+      <button id="website-open" type="button" disabled>
+        Website openen
+      </button>
+
+      <button id="website-close" type="button" disabled>
+        Website sluiten
+      </button>
+    </div>
+
+    <p id="website-result" role="status" aria-live="polite"></p>
+
+    <button id="website-refresh" type="button">
+      Status opnieuw ophalen
+    </button>
+
+    <p>
+      <a class="voorraad-link" href="voorraad.html">
+        Voorraad beheren
+      </a>
+    </p>
+  </details>
+
+  <script>
+    (() => {
+      const API =
+        'https://licht-en-liefde-api.timdekruyf07.workers.dev';
+
+      const panel = document.getElementById('website-beheer');
+      const password = document.getElementById('website-password');
+      const openButton = document.getElementById('website-open');
+      const closeButton = document.getElementById('website-close');
+      const result = document.getElementById('website-result');
+
+      let token = '';
+      let state = null;
+      let busy = false;
+
+      function render() {
+        document.getElementById('website-status').textContent =
+          state
+            ? (
+                state.is_open
+                  ? 'Website is OPEN'
+                  : 'Website is GESLOTEN'
+              )
+            : 'Website-status is nog niet beschikbaar';
+
+        openButton.disabled =
+          busy || !token || !state || state.is_open;
+
+        closeButton.disabled =
+          busy || !token || !state || !state.is_open;
+
+        document.getElementById('website-unlock').disabled = busy;
+        document.getElementById('website-refresh').disabled = busy;
+      }
+
+      async function request(path, options = {}) {
+        const response = await fetch(API + path, {
+          ...options,
+          cache: 'no-store',
+          credentials: 'omit',
+          signal: AbortSignal.timeout(15000)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const error = new Error(
+            data.error || 'De aanvraag is mislukt.'
+          );
+
+          error.status = response.status;
+          throw error;
+        }
+
+        if (typeof data.is_open !== 'boolean') {
+          throw new Error('Ongeldige website-status.');
+        }
+
+        return data;
+      }
+
+      async function loadStatus() {
+        if (busy) return;
+
+        busy = true;
+        result.textContent = 'Status ophalen…';
+        render();
+
+        try {
+          state = await request(
+            token ? '/admin/site-state' : '/site-state',
+            {
+              headers: token
+                ? { Authorization: 'Bearer ' + token }
+                : {}
+            }
+          );
+
+          result.textContent = token
+            ? 'De bediening is ontgrendeld.'
+            : '';
+        } catch (error) {
+          state = null;
+
+          if (error.status === 401) {
+            token = '';
+          }
+
+          result.textContent = error.message;
+        } finally {
+          busy = false;
+          render();
+        }
+      }
+
+      async function changeState(isOpen) {
+        if (busy || !token || !state) return;
+
+        busy = true;
+
+        result.textContent = isOpen
+          ? 'Website openen…'
+          : 'Website sluiten…';
+
+        render();
+
+        try {
+          state = await request('/admin/site-state', {
+            method: 'PUT',
+            headers: {
+              Authorization: 'Bearer ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              is_open: isOpen,
+              version: state.version
+            })
+          });
+
+          result.textContent = state.is_open
+            ? 'De website is geopend. Bezoekers kunnen de website gebruiken.'
+            : 'De website is gesloten. Nieuwe bestellingen zijn geblokkeerd.';
+        } catch (error) {
+          state = null;
+
+          if (error.status === 401) {
+            token = '';
+          }
+
+          result.textContent =
+            error.message + ' Klik op Status opnieuw ophalen.';
+        } finally {
+          busy = false;
+          render();
+        }
+      }
+
+      document.getElementById('website-login')
+        .addEventListener('submit', event => {
+          event.preventDefault();
+
+          if (busy) return;
+
+          token = password.value;
+          password.value = '';
+
+          loadStatus();
+        });
+
+      openButton.addEventListener('click', () => {
+        changeState(true);
+      });
+
+      closeButton.addEventListener('click', () => {
+        changeState(false);
+      });
+
+      document.getElementById('website-refresh')
+        .addEventListener('click', loadStatus);
+
+      panel.addEventListener('toggle', () => {
+        if (panel.open) {
+          loadStatus();
+        } else {
+          token = '';
+          password.value = '';
+          render();
+        }
+      });
+
+      loadStatus();
+    })();
+  </script>
 
   <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
 </body>
