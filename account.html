@@ -73,16 +73,30 @@
   </header>
 
   <main class="container narrow">
-    <p id="page-message" class="account-message"
-      role="status" aria-live="polite"></p>
+    <p
+      id="page-message"
+      class="account-message"
+      role="status"
+      aria-live="polite"
+    ></p>
 
     <section id="auth-section" class="box" hidden>
-      <div class="account-tabs" role="group" aria-label="Account">
-        <button type="button" id="login-tab"
-          class="account-tab active"></button>
+      <div
+        class="account-tabs"
+        role="group"
+        aria-label="Account"
+      >
+        <button
+          type="button"
+          id="login-tab"
+          class="account-tab active"
+        ></button>
 
-        <button type="button" id="register-tab"
-          class="account-tab"></button>
+        <button
+          type="button"
+          id="register-tab"
+          class="account-tab"
+        ></button>
       </div>
 
       <h2 id="auth-heading"></h2>
@@ -92,6 +106,7 @@
         <fieldset id="auth-fields">
           <label>
             <span data-text="email"></span>
+
             <input
               id="account-email"
               name="email"
@@ -102,8 +117,9 @@
             >
           </label>
 
-          <label>
+          <label id="password-label">
             <span data-text="password"></span>
+
             <input
               id="account-password"
               name="password"
@@ -119,12 +135,28 @@
 
         <div id="turnstile-container"></div>
 
-        <button id="auth-submit" type="submit"
-          class="shop-button" disabled></button>
+        <button
+          id="auth-submit"
+          type="submit"
+          class="shop-button"
+          disabled
+        ></button>
       </form>
 
-      <p id="auth-message" class="account-message"
-        role="status" aria-live="polite"></p>
+      <p>
+        <button
+          type="button"
+          id="forgot-password"
+          class="small-button"
+        ></button>
+      </p>
+
+      <p
+        id="auth-message"
+        class="account-message"
+        role="status"
+        aria-live="polite"
+      ></p>
     </section>
 
     <section id="profile-section" class="box" hidden>
@@ -137,38 +169,68 @@
           <div class="fields">
             <label>
               <span data-text="first_name"></span>
-              <input name="first_name" autocomplete="given-name"
-                maxlength="80" required>
+
+              <input
+                name="first_name"
+                autocomplete="given-name"
+                maxlength="80"
+                required
+              >
             </label>
 
             <label>
               <span data-text="last_name"></span>
-              <input name="last_name" autocomplete="family-name"
-                maxlength="100" required>
+
+              <input
+                name="last_name"
+                autocomplete="family-name"
+                maxlength="100"
+                required
+              >
             </label>
 
             <label>
               <span data-text="street"></span>
-              <input name="street" autocomplete="address-line1"
-                maxlength="150" required>
+
+              <input
+                name="street"
+                autocomplete="address-line1"
+                maxlength="150"
+                required
+              >
             </label>
 
             <label>
               <span data-text="house_number"></span>
-              <input name="house_number" autocomplete="address-line2"
-                maxlength="30" required>
+
+              <input
+                name="house_number"
+                autocomplete="address-line2"
+                maxlength="30"
+                required
+              >
             </label>
 
             <label>
               <span data-text="postal_code"></span>
-              <input name="postal_code" autocomplete="postal-code"
-                maxlength="12" required>
+
+              <input
+                name="postal_code"
+                autocomplete="postal-code"
+                maxlength="12"
+                required
+              >
             </label>
 
             <label>
               <span data-text="city"></span>
-              <input name="city" autocomplete="address-level2"
-                maxlength="100" required>
+
+              <input
+                name="city"
+                autocomplete="address-level2"
+                maxlength="100"
+                required
+              >
             </label>
           </div>
 
@@ -176,19 +238,32 @@
         </fieldset>
 
         <div class="account-actions">
-          <button type="submit" id="save-address"
-            class="shop-button"></button>
+          <button
+            type="submit"
+            id="save-address"
+            class="shop-button"
+          ></button>
 
-          <button type="button" id="delete-address"
-            class="small-button"></button>
+          <button
+            type="button"
+            id="delete-address"
+            class="small-button"
+          ></button>
 
-          <button type="button" id="logout"
-            class="small-button"></button>
+          <button
+            type="button"
+            id="logout"
+            class="small-button"
+          ></button>
         </div>
       </form>
 
-      <p id="address-message" class="account-message"
-        role="status" aria-live="polite"></p>
+      <p
+        id="address-message"
+        class="account-message"
+        role="status"
+        aria-live="polite"
+      ></p>
     </section>
   </main>
 
@@ -205,16 +280,35 @@
     const A = window.CustomerAccount;
     const t = A.text;
 
-    const authSection = document.getElementById('auth-section');
-    const profileSection = document.getElementById('profile-section');
-    const authForm = document.getElementById('auth-form');
-    const addressForm = document.getElementById('address-form');
-    const authSubmit = document.getElementById('auth-submit');
-    const authMessage = document.getElementById('auth-message');
-    const addressMessage = document.getElementById('address-message');
-    const pageMessage = document.getElementById('page-message');
-    const loginTab = document.getElementById('login-tab');
-    const registerTab = document.getElementById('register-tab');
+    const authSection =
+      document.getElementById('auth-section');
+
+    const profileSection =
+      document.getElementById('profile-section');
+
+    const authForm =
+      document.getElementById('auth-form');
+
+    const addressForm =
+      document.getElementById('address-form');
+
+    const authSubmit =
+      document.getElementById('auth-submit');
+
+    const authMessage =
+      document.getElementById('auth-message');
+
+    const addressMessage =
+      document.getElementById('address-message');
+
+    const pageMessage =
+      document.getElementById('page-message');
+
+    const loginTab =
+      document.getElementById('login-tab');
+
+    const registerTab =
+      document.getElementById('register-tab');
 
     let mode = 'login';
     let account = null;
@@ -250,18 +344,30 @@
 
       set(
         'auth-heading',
-        mode === 'login' ? 'Welkom terug' : 'Maak je account aan',
-        mode === 'login' ? 'Welcome back' : 'Create your account'
+        mode === 'forgot'
+          ? 'Wachtwoord vergeten'
+          : mode === 'login'
+            ? 'Welkom terug'
+            : 'Maak je account aan',
+        mode === 'forgot'
+          ? 'Forgot your password'
+          : mode === 'login'
+            ? 'Welcome back'
+            : 'Create your account'
       );
 
       set(
         'auth-description',
-        mode === 'login'
-          ? 'Log in om je opgeslagen adres te bekijken en aan te passen.'
-          : 'Maak een account aan om je afleveradres te bewaren.',
-        mode === 'login'
-          ? 'Sign in to view and edit your saved address.'
-          : 'Create an account to save your shipping address.'
+        mode === 'forgot'
+          ? 'Vul je e-mailadres in. Je ontvangt een link als er een account bestaat. De link is 30 minuten geldig.'
+          : mode === 'login'
+            ? 'Log in om je opgeslagen adres te bekijken en aan te passen.'
+            : 'Maak een account aan om je afleveradres te bewaren.',
+        mode === 'forgot'
+          ? 'Enter your email address. If an account exists, you will receive a link valid for 30 minutes.'
+          : mode === 'login'
+            ? 'Sign in to view and edit your saved address.'
+            : 'Create an account to save your shipping address.'
       );
 
       set(
@@ -270,7 +376,11 @@
         'Use at least 15 characters. A long passphrase can be easier to remember.'
       );
 
-      set('profile-heading', 'Je afleveradres', 'Your shipping address');
+      set(
+        'profile-heading',
+        'Je afleveradres',
+        'Your shipping address'
+      );
 
       set(
         'profile-description',
@@ -278,31 +388,78 @@
         'Save or update your address here.'
       );
 
-      set('country-note', 'Land: Nederland', 'Country: Netherlands');
+      set(
+        'country-note',
+        'Land: Nederland',
+        'Country: Netherlands'
+      );
+
       set('save-address', 'Adres opslaan', 'Save address');
-      set('delete-address', 'Opgeslagen adres verwijderen', 'Remove saved address');
+
+      set(
+        'delete-address',
+        'Opgeslagen adres verwijderen',
+        'Remove saved address'
+      );
+
       set('logout', 'Uitloggen', 'Sign out');
 
-      document.querySelectorAll('[data-text]').forEach(node => {
-        node.textContent = t(...labels[node.dataset.text]);
-      });
+      set(
+        'forgot-password',
+        'Wachtwoord vergeten?',
+        'Forgot your password?'
+      );
+
+      document.querySelectorAll('[data-text]')
+        .forEach(node => {
+          node.textContent = t(
+            ...labels[node.dataset.text]
+          );
+        });
 
       authSubmit.textContent = busy
         ? t('Even wachten...', 'Please wait...')
-        : mode === 'login'
-          ? t('Inloggen', 'Sign in')
-          : t('Account aanmaken', 'Create account');
+        : mode === 'forgot'
+          ? t('Herstellink aanvragen', 'Request reset link')
+          : mode === 'login'
+            ? t('Inloggen', 'Sign in')
+            : t('Account aanmaken', 'Create account');
 
-      loginTab.classList.toggle('active', mode === 'login');
-      registerTab.classList.toggle('active', mode === 'register');
-      loginTab.setAttribute('aria-pressed', String(mode === 'login'));
-      registerTab.setAttribute('aria-pressed', String(mode === 'register'));
+      loginTab.classList.toggle(
+        'active',
+        mode === 'login'
+      );
 
-      document.getElementById('password-hint').hidden = mode !== 'register';
+      registerTab.classList.toggle(
+        'active',
+        mode === 'register'
+      );
 
-      const password = document.getElementById('account-password');
-      password.autocomplete =
-        mode === 'register' ? 'new-password' : 'current-password';
+      loginTab.setAttribute(
+        'aria-pressed',
+        String(mode === 'login')
+      );
+
+      registerTab.setAttribute(
+        'aria-pressed',
+        String(mode === 'register')
+      );
+
+      document.getElementById('password-hint').hidden =
+        mode !== 'register';
+
+      const password =
+        document.getElementById('account-password');
+
+      document.getElementById('password-label').hidden =
+        mode === 'forgot';
+
+      password.required = mode !== 'forgot';
+      password.disabled = busy || mode === 'forgot';
+
+      password.autocomplete = mode === 'register'
+        ? 'new-password'
+        : 'current-password';
 
       if (mode === 'register') {
         password.minLength = 15;
@@ -314,15 +471,29 @@
     }
 
     function updateDisabled() {
-      document.getElementById('auth-fields').disabled = busy;
-      document.getElementById('address-fields').disabled = busy;
+      document.getElementById('auth-fields').disabled =
+        busy;
+
+      document.getElementById('address-fields').disabled =
+        busy;
 
       loginTab.disabled = busy;
       registerTab.disabled = busy;
+
+      document.getElementById('forgot-password').disabled =
+        busy;
+
+      document.getElementById('account-password').disabled =
+        busy || mode === 'forgot';
+
       authSubmit.disabled = busy || !turnstileToken;
 
-      document.getElementById('save-address').disabled = busy;
-      document.getElementById('logout').disabled = busy;
+      document.getElementById('save-address').disabled =
+        busy;
+
+      document.getElementById('logout').disabled =
+        busy;
+
       document.getElementById('delete-address').disabled =
         busy || !account?.address;
     }
@@ -332,13 +503,18 @@
       profileSection.hidden = !account;
 
       if (account) {
-        document.getElementById('signed-in-email').textContent = account.email;
+        document.getElementById('signed-in-email')
+          .textContent = account.email;
 
         const address = account.address || {};
 
         for (const field of [
-          'first_name', 'last_name', 'street',
-          'house_number', 'postal_code', 'city'
+          'first_name',
+          'last_name',
+          'street',
+          'house_number',
+          'postal_code',
+          'city'
         ]) {
           addressForm.elements.namedItem(field).value =
             address[field] || '';
@@ -362,13 +538,26 @@
 
       mode = value;
       authMessage.textContent = '';
-      document.getElementById('account-password').value = '';
+
+      document.getElementById('account-password').value =
+        '';
+
       translate();
       resetWidget();
     }
 
-    loginTab.addEventListener('click', () => changeMode('login'));
-    registerTab.addEventListener('click', () => changeMode('register'));
+    loginTab.addEventListener('click', () => {
+      changeMode('login');
+    });
+
+    registerTab.addEventListener('click', () => {
+      changeMode('register');
+    });
+
+    document.getElementById('forgot-password')
+      .addEventListener('click', () => {
+        changeMode('forgot');
+      });
 
     async function prepareWidget() {
       if (widgetReady) return;
@@ -386,10 +575,12 @@
         if (!window.turnstile) {
           await new Promise((resolve, reject) => {
             const script = document.createElement('script');
+
             script.src =
               'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
             script.onload = resolve;
+
             script.onerror = () => reject(new Error(t(
               'De beveiligingscontrole kon niet worden geladen. Ververs de pagina.',
               'The security check could not be loaded. Refresh the page.'
@@ -399,31 +590,36 @@
           });
         }
 
-        widgetId = window.turnstile.render('#turnstile-container', {
-          sitekey: config.turnstile_site_key,
-          action: 'account',
-          theme: 'light',
-          language: 'auto',
+        widgetId = window.turnstile.render(
+          '#turnstile-container',
+          {
+            sitekey: config.turnstile_site_key,
+            action: 'account',
+            theme: 'light',
+            language: 'auto',
 
-          callback: token => {
-            turnstileToken = token;
-            updateDisabled();
-          },
+            callback: token => {
+              turnstileToken = token;
+              updateDisabled();
+            },
 
-          'expired-callback': () => {
-            turnstileToken = '';
-            updateDisabled();
-          },
+            'expired-callback': () => {
+              turnstileToken = '';
+              updateDisabled();
+            },
 
-          'error-callback': () => {
-            turnstileToken = '';
-            authMessage.textContent = t(
-              'De beveiligingscontrole is mislukt. Ververs de pagina om opnieuw te proberen.',
-              'The security check failed. Refresh the page to try again.'
-            );
-            updateDisabled();
+            'error-callback': () => {
+              turnstileToken = '';
+
+              authMessage.textContent = t(
+                'De beveiligingscontrole is mislukt. Ververs de pagina om opnieuw te proberen.',
+                'The security check failed. Refresh the page to try again.'
+              );
+
+              updateDisabled();
+            }
           }
-        });
+        );
 
         widgetReady = true;
       } catch (error) {
@@ -433,23 +629,54 @@
 
     authForm.addEventListener('submit', async event => {
       event.preventDefault();
+
       if (busy || !turnstileToken) return;
 
       busy = true;
       authMessage.textContent = '';
       translate();
 
-      const email = document.getElementById('account-email').value.trim();
-      const password = document.getElementById('account-password').value;
+      const email = document.getElementById(
+        'account-email'
+      ).value.trim();
+
+      const password = document.getElementById(
+        'account-password'
+      ).value;
 
       try {
-        account = mode === 'login'
-          ? await A.login(email, password, turnstileToken)
-          : await A.register(email, password, turnstileToken);
+        if (mode === 'forgot') {
+          await A.requestPasswordReset(
+            email,
+            turnstileToken
+          );
 
-        document.getElementById('account-password').value = '';
+          authMessage.textContent = t(
+            'Als er een account bestaat, ontvang je een herstellink. Controleer ook je spamfolder. Je kunt maximaal 3 links per uur aanvragen.',
+            'If an account exists, you will receive a reset link. Check your spam folder too. You can request up to 3 links per hour.'
+          );
+
+          return;
+        }
+
+        account = mode === 'login'
+          ? await A.login(
+              email,
+              password,
+              turnstileToken
+            )
+          : await A.register(
+              email,
+              password,
+              turnstileToken
+            );
+
+        document.getElementById('account-password').value =
+          '';
+
         pageMessage.textContent = '';
         addressMessage.textContent = '';
+
         showAccount();
       } catch (error) {
         authMessage.textContent = error.message;
@@ -462,6 +689,7 @@
 
     addressForm.addEventListener('submit', async event => {
       event.preventDefault();
+
       if (busy || !account) return;
 
       busy = true;
@@ -471,15 +699,23 @@
       const address = { country: 'NL' };
 
       for (const name of [
-        'first_name', 'last_name', 'street',
-        'house_number', 'postal_code', 'city'
+        'first_name',
+        'last_name',
+        'street',
+        'house_number',
+        'postal_code',
+        'city'
       ]) {
-        address[name] = addressForm.elements.namedItem(name).value.trim();
+        address[name] = addressForm.elements
+          .namedItem(name)
+          .value.trim();
       }
 
       try {
         account = await A.saveAddress(address);
+
         showAccount();
+
         addressMessage.textContent = t(
           'Je adres is opgeslagen.',
           'Your address has been saved.'
@@ -506,7 +742,9 @@
         if (!confirm(t(
           'Wil je je opgeslagen adres verwijderen?',
           'Remove your saved address?'
-        ))) return;
+        ))) {
+          return;
+        }
 
         busy = true;
         addressMessage.textContent = '';
@@ -514,7 +752,9 @@
 
         try {
           account = await A.saveAddress(null);
+
           showAccount();
+
           addressMessage.textContent = t(
             'Je opgeslagen adres is verwijderd.',
             'Your saved address has been removed.'
@@ -544,8 +784,10 @@
 
         try {
           await A.logout();
+
           account = null;
           addressForm.reset();
+
           showAccount();
 
           authMessage.textContent = t(
@@ -567,10 +809,15 @@
       ?.addEventListener('click', event => {
         event.preventDefault();
         event.stopImmediatePropagation();
-        document.getElementById('account-heading').scrollIntoView();
+
+        document.getElementById('account-heading')
+          .scrollIntoView();
       }, true);
 
-    window.addEventListener('site-language-change', translate);
+    window.addEventListener(
+      'site-language-change',
+      translate
+    );
 
     async function init() {
       translate();
@@ -595,7 +842,10 @@
       }
 
       showAccount();
-      if (!account) await prepareWidget();
+
+      if (!account) {
+        await prepareWidget();
+      }
     }
 
     init();
