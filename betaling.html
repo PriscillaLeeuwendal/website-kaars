@@ -6,6 +6,12 @@
   <meta name="referrer" content="no-referrer">
   <title>Payment - Diatheke Atelier</title>
   <link rel="stylesheet" href="stijl.css">
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body>
@@ -18,11 +24,19 @@
       <p id="status" role="status" aria-live="polite"></p>
       <p id="order-number" class="note"></p>
 
-      <button id="check" type="button" class="shop-button"></button>
+      <button
+        id="check"
+        type="button"
+        class="shop-button"
+      ></button>
+
       <a id="resume" class="button" hidden></a>
 
-      <p><a href="producten.html" id="back"></a></p>
-      <p class="note" id="test-note"></p>
+      <p>
+        <a href="producten.html" id="back"></a>
+      </p>
+
+      <p class="note" id="test-note" hidden></p>
     </section>
   </main>
 
@@ -36,6 +50,7 @@
 
   <script>
     const ATTEMPT_KEY = 'licht-en-liefde-checkout-v1';
+
     const params = new URLSearchParams(location.search);
     const orderId = params.get('order');
     const key = params.get('key');
@@ -56,6 +71,7 @@
 
     function render() {
       const paid = data?.status === 'paid';
+      const test = data?.mode === 'test';
 
       document.title = Shop.text(
         'Betaling - Diatheke Atelier',
@@ -63,21 +79,43 @@
       );
 
       document.getElementById('heading').textContent = paid
-        ? Shop.text('Testbetaling geslaagd', 'Test payment successful')
-        : Shop.text('Betaling controleren', 'Checking payment');
+        ? (
+            test
+              ? Shop.text(
+                  'Testbetaling geslaagd',
+                  'Test payment successful'
+                )
+              : Shop.text(
+                  'Betaling geslaagd',
+                  'Payment successful'
+                )
+          )
+        : Shop.text(
+            'Betaling controleren',
+            'Checking payment'
+          );
 
-      document.getElementById('back').textContent = Shop.text(
-        '← Terug naar producten', '← Back to products'
-      );
+      document.getElementById('back').textContent =
+        Shop.text(
+          '← Terug naar shop',
+          '← Back to shop'
+        );
 
-      document.getElementById('test-note').textContent = Shop.text(
-        'Dit is een testbetaling. Er is geen echt geld afgeschreven. Een geslaagde testbetaling werkt de ingestelde voorraad wel bij.',
-        'This is a test payment. No real money has been charged. A successful test payment does update the configured stock.'
-      );
+      const note = document.getElementById('test-note');
 
-      document.getElementById('order-number').textContent = valid
-        ? `${Shop.text('Bestelnummer', 'Order number')}: ${orderId}`
+      note.hidden = !test;
+
+      note.textContent = test
+        ? Shop.text(
+            'Dit is een testbetaling. Er is geen echt geld afgeschreven. De voorraad wordt wel bijgewerkt.',
+            'This is a test payment. No real money has been charged. Stock is updated.'
+          )
         : '';
+
+      document.getElementById('order-number').textContent =
+        valid
+          ? `${Shop.text('Bestelnummer', 'Order number')}: ${orderId}`
+          : '';
 
       button.textContent = busy
         ? Shop.text('Even controleren...', 'Checking...')
@@ -96,20 +134,25 @@
         );
       } else if (failed) {
         message = Shop.text(
-          'De betaling kon nog niet worden gecontroleerd. Klik op opnieuw controleren; begin niet direct een nieuwe betaling.',
+          'De betaling kon nog niet worden gecontroleerd. Klik op opnieuw controleren; begin geen nieuwe betaling.',
           'The payment could not be checked. Check again before starting another payment.'
         );
       } else if (paid) {
-        message = Shop.text(
-          'Je testbetaling is geslaagd en de voorraad is bijgewerkt.',
-          'Your test payment succeeded and stock has been updated.'
-        );
+        message = test
+          ? Shop.text(
+              'Je testbetaling is geslaagd en de voorraad is bijgewerkt.',
+              'Your test payment succeeded and stock has been updated.'
+            )
+          : Shop.text(
+              'Bedankt voor je bestelling! Je betaling is geslaagd.',
+              'Thank you for your order! Your payment was successful.'
+            );
       } else if (
         ['canceled', 'expired', 'failed'].includes(data?.status)
       ) {
         message = Shop.text(
-          'Deze betaling is geannuleerd, verlopen of mislukt. Er is geen geslaagde betaling geregistreerd. De gereserveerde voorraad is vrijgegeven.',
-          'This payment was canceled, expired or failed. No successful payment was recorded. Reserved stock has been released.'
+          'Deze betaling is geannuleerd, verlopen of mislukt. De gereserveerde voorraad is vrijgegeven.',
+          'This payment was canceled, expired or failed. Reserved stock has been released.'
         );
       } else if (data?.status === 'review') {
         message = Shop.text(
@@ -132,19 +175,27 @@
 
       document.getElementById('status').textContent = message;
 
-      if (data?.status === 'pending' && data.checkout_url) {
+      if (
+        data?.status === 'pending' &&
+        data.checkout_url
+      ) {
         try {
           const url = new URL(data.checkout_url);
 
           if (
             url.protocol === 'https:' &&
-            (url.hostname === 'mollie.com' ||
-              url.hostname.endsWith('.mollie.com'))
+            (
+              url.hostname === 'mollie.com' ||
+              url.hostname.endsWith('.mollie.com')
+            )
           ) {
             resume.href = url.href;
+
             resume.textContent = Shop.text(
-              'Terug naar deze betaling', 'Return to this payment'
+              'Terug naar deze betaling',
+              'Return to this payment'
             );
+
             resume.hidden = false;
           }
         } catch (_) {}
@@ -166,9 +217,16 @@
         !attempt ||
         attempt.checkout_key !== key ||
         !Array.isArray(attempt.items)
-      ) return;
+      ) {
+        return;
+      }
 
-      if (attempt.order_id && attempt.order_id !== orderId) return;
+      if (
+        attempt.order_id &&
+        attempt.order_id !== orderId
+      ) {
+        return;
+      }
 
       if (data.status === 'paid') {
         await Shop.completeOrder(orderId, attempt.items);
@@ -185,15 +243,20 @@
       if (busy || !valid) return;
 
       clearTimeout(timer);
+
       busy = true;
       failed = false;
       cartFailed = false;
+
       render();
 
       try {
         const response = await fetch(
-          Shop.API + '/order?order=' +
-          encodeURIComponent(orderId) + '&key=' + key,
+          Shop.API +
+          '/order?order=' +
+          encodeURIComponent(orderId) +
+          '&key=' +
+          key,
           {
             cache: 'no-store',
             signal: AbortSignal.timeout(20000)
@@ -205,7 +268,7 @@
         if (
           !response.ok ||
           result.order_id !== orderId ||
-          result.mode !== 'test'
+          !['test', 'live'].includes(result.mode)
         ) {
           throw new Error('Controle mislukt');
         }
@@ -238,8 +301,14 @@
       check();
     });
 
-    window.addEventListener('site-language-change', render);
-    window.addEventListener('pagehide', () => clearTimeout(timer));
+    window.addEventListener(
+      'site-language-change',
+      render
+    );
+
+    window.addEventListener('pagehide', () => {
+      clearTimeout(timer);
+    });
 
     render();
     check();
