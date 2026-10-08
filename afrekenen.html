@@ -36,7 +36,7 @@
   </header>
 
   <main class="container checkout-container">
-    <a href="producten.html" id="back">← Back to products</a>
+    <a href="producten.html" id="back">← Back to shop</a>
     <p class="test" id="test-note"></p>
 
     <section class="box">
@@ -47,68 +47,109 @@
     <section class="box">
       <h2 id="address-title">Shipping address</h2>
 
-      <p id="account-note" class="account-note"
-        role="status" aria-live="polite"></p>
+      <p
+        id="account-note"
+        class="account-note"
+        role="status"
+        aria-live="polite"
+      ></p>
 
       <form id="checkout-form">
         <fieldset id="customer-fields" disabled>
           <div class="fields">
             <label>
               <span data-label="first_name"></span>
-              <input name="first_name" autocomplete="given-name"
-                maxlength="80" required>
+              <input
+                name="first_name"
+                autocomplete="given-name"
+                maxlength="80"
+                required
+              >
             </label>
 
             <label>
               <span data-label="last_name"></span>
-              <input name="last_name" autocomplete="family-name"
-                maxlength="100" required>
+              <input
+                name="last_name"
+                autocomplete="family-name"
+                maxlength="100"
+                required
+              >
             </label>
 
             <label class="wide">
               <span data-label="email"></span>
-              <input name="email" type="email" autocomplete="email"
-                maxlength="254" required>
+              <input
+                name="email"
+                type="email"
+                autocomplete="email"
+                maxlength="254"
+                required
+              >
             </label>
 
             <label>
               <span data-label="street"></span>
-              <input name="street" autocomplete="address-line1"
-                maxlength="150" required>
+              <input
+                name="street"
+                autocomplete="address-line1"
+                maxlength="150"
+                required
+              >
             </label>
 
             <label>
               <span data-label="house_number"></span>
-              <input name="house_number" autocomplete="address-line2"
-                maxlength="30" required>
+              <input
+                name="house_number"
+                autocomplete="address-line2"
+                maxlength="30"
+                required
+              >
             </label>
 
             <label>
               <span data-label="postal_code"></span>
-              <input name="postal_code" autocomplete="postal-code"
-                maxlength="12" required>
+              <input
+                name="postal_code"
+                autocomplete="postal-code"
+                maxlength="12"
+                required
+              >
             </label>
 
             <label>
               <span data-label="city"></span>
-              <input name="city" autocomplete="address-level2"
-                maxlength="100" required>
+              <input
+                name="city"
+                autocomplete="address-level2"
+                maxlength="100"
+                required
+              >
             </label>
           </div>
 
           <p id="country-note"></p>
         </fieldset>
 
-        <button id="pay" class="shop-button"
-          type="submit" disabled></button>
+        <button
+          id="pay"
+          class="shop-button"
+          type="submit"
+          disabled
+        ></button>
       </form>
 
       <p id="message" role="status" aria-live="polite"></p>
 
       <a id="continue" class="shop-button" hidden></a>
 
-      <button id="restart" class="shop-button"
-        type="button" hidden></button>
+      <button
+        id="restart"
+        class="shop-button"
+        type="button"
+        hidden
+      ></button>
     </section>
   </main>
 
@@ -147,6 +188,7 @@
     let items = [];
     let products = [];
     let expectedTotal = 0;
+    let shipping = null;
     let ready = false;
     let busy = false;
     let terminal = false;
@@ -256,8 +298,12 @@
         Shop.text('← Terug naar shop', '← Back to shop');
 
       document.getElementById('test-note').textContent = Shop.text(
-        'Testmodus: er wordt geen echt geld afgeschreven. Verzending is voorlopig alleen binnen Nederland.',
-        'Test mode: no real money is charged. Shipping is currently available only within the Netherlands.'
+        shipping?.mode === 'test'
+          ? 'Testmodus: er wordt geen echt geld afgeschreven. Verzending is alleen binnen Nederland.'
+          : 'Verzending is alleen binnen Nederland.',
+        shipping?.mode === 'test'
+          ? 'Test mode: no real money is charged. Shipping is available only within the Netherlands.'
+          : 'Shipping is available only within the Netherlands.'
       );
 
       document.getElementById('summary-title').textContent =
@@ -286,10 +332,14 @@
       pay.textContent = busy
         ? Shop.text('Betaling wordt voorbereid...', 'Preparing payment...')
         : attempt
-          ? Shop.text('Hervat deze testbestelling', 'Resume this test order')
+          ? Shop.text('Hervat deze bestelling', 'Resume this order')
           : Shop.text(
-              'Naar Mollie — testbetaling',
-              'Continue to Mollie — test payment'
+              shipping?.mode === 'test'
+                ? 'Naar Mollie — testbetaling'
+                : 'Naar Mollie — betalen',
+              shipping?.mode === 'test'
+                ? 'Continue to Mollie — test payment'
+                : 'Continue to Mollie — pay'
             );
 
       continueLink.textContent =
@@ -332,13 +382,13 @@
         subtotal += product.cents * quantity;
       });
 
-      expectedTotal = subtotal + 795;
+      expectedTotal = subtotal + shipping.shipping_cents;
 
       summary.append(
         Shop.element(
           'p',
           '',
-          `${Shop.text('Verzending', 'Shipping')}: ${Shop.money(795)}`
+          `${Shop.text('Verzending', 'Shipping')}: ${Shop.money(shipping.shipping_cents)}`
         ),
         Shop.element(
           'strong',
@@ -463,26 +513,28 @@
       }
 
       try {
-        const [loadedProducts] = await Promise.all([
+        const [loadedProducts, loadedShipping] = await Promise.all([
           Promise.all(
             items.map(item =>
               Shop.getProduct(item.product_id, true)
             )
           ),
+          Shop.getShipping(),
           loadAccountDetails()
         ]);
 
         products = loadedProducts;
+        shipping = loadedShipping;
         ready = true;
 
-        renderSummary();
+        translate();
 
         fields.disabled = Boolean(attempt);
         pay.disabled = false;
       } catch (_) {
         document.getElementById('summary').textContent = Shop.text(
-          'De producten konden niet worden geladen. Ververs deze pagina om het opnieuw te proberen.',
-          'Products could not be loaded. Refresh this page to try again.'
+          'De producten of verzendkosten konden niet worden geladen. Ververs deze pagina om het opnieuw te proberen.',
+          'Products or shipping costs could not be loaded. Refresh this page to try again.'
         );
       }
     }
@@ -585,7 +637,10 @@
           ));
         }
 
-        if (data.mode !== 'test' || !data.order_id) {
+        if (
+          !['test', 'live'].includes(data.mode) ||
+          !data.order_id
+        ) {
           throw new Error(Shop.text(
             'Onverwacht antwoord. Probeer dezelfde bestelling opnieuw.',
             'Unexpected response. Retry the same order.'
@@ -593,6 +648,7 @@
         }
 
         attempt.order_id = data.order_id;
+        attempt.mode = data.mode;
         saveAttempt();
 
         if (data.status === 'paid') {
@@ -638,13 +694,16 @@
           ));
         }
 
-        if (data.total_cents !== expectedTotal) {
+        if (
+          data.total_cents !== expectedTotal ||
+          data.mode !== shipping.mode
+        ) {
           continueLink.href = url.href;
           continueLink.hidden = false;
 
           message.textContent = Shop.text(
-            `De actuele prijzen zijn gewijzigd. Het bevestigde totaal inclusief verzending is ${Shop.money(data.total_cents)}. Controleer dit bedrag voordat je doorgaat.`,
-            `Current prices have changed. The confirmed total including shipping is ${Shop.money(data.total_cents)}. Check this amount before continuing.`
+            `${data.mode === 'live' ? 'Dit is een echte betaling.' : 'Dit is een testbetaling.'} Het bevestigde totaal inclusief verzending is ${Shop.money(data.total_cents)}. Controleer dit voordat je doorgaat.`,
+            `${data.mode === 'live' ? 'This is a real payment.' : 'This is a test payment.'} The confirmed total including shipping is ${Shop.money(data.total_cents)}. Check this before continuing.`
           );
         } else {
           location.href = url.href;
