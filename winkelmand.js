@@ -16,6 +16,7 @@
   let panel = null;
   let previousFocus = null;
   let refreshing = false;
+  let shipping = null;
 
   const products = new Map();
 
@@ -172,6 +173,22 @@
     return parse === 'text'
       ? response.text()
       : response.json();
+  }
+
+  async function getShipping() {
+    const data = await request(API + '/shipping');
+
+    if (
+      !Number.isSafeInteger(data.shipping_cents) ||
+      data.shipping_cents < 0 ||
+      data.shipping_cents > 100000 ||
+      !['test', 'live'].includes(data.mode)
+    ) {
+      throw new Error('Ongeldige verzendkosten');
+    }
+
+    shipping = data;
+    return data;
   }
 
   async function loadCatalog(fresh = false) {
@@ -377,7 +394,7 @@
     }
 
     let subtotal = 0;
-    let complete = true;
+    let complete = Boolean(shipping);
 
     for (const id of ids) {
       const product = products.get(id);
@@ -410,6 +427,7 @@
       const minus = element('button', '', '−');
       const number = element('span', '', String(state.items[id]));
       const plus = element('button', '', '+');
+
       const remove = element(
         'button',
         'cart-remove',
@@ -518,12 +536,12 @@
           `${text(
             'Verzending binnen Nederland',
             'Shipping within the Netherlands'
-          )}: ${money(795)}`
+          )}: ${money(shipping.shipping_cents)}`
         ),
         element(
           'strong',
           '',
-          `${text('Totaal', 'Total')}: ${money(subtotal + 795)}`
+          `${text('Totaal', 'Total')}: ${money(subtotal + shipping.shipping_cents)}`
         )
       );
 
@@ -549,8 +567,12 @@
         'p',
         'cart-note',
         text(
-          'Testmodus: je betaalt nog geen echt geld. Artikelen in de winkelmand zijn nog niet gereserveerd.',
-          'Test mode: no real money is charged. Items in the cart are not yet reserved.'
+          shipping?.mode === 'test'
+            ? 'Testmodus: je betaalt nog geen echt geld. Artikelen in de winkelmand zijn nog niet gereserveerd.'
+            : 'Artikelen in de winkelmand zijn nog niet gereserveerd.',
+          shipping?.mode === 'test'
+            ? 'Test mode: no real money is charged. Items in the cart are not yet reserved.'
+            : 'Items in the cart are not yet reserved.'
         )
       )
     );
@@ -628,12 +650,14 @@
     });
 
     refreshing = true;
+    shipping = null;
     renderCart();
     close.focus();
 
-    await Promise.allSettled(
-      Object.keys(state.items).map(id => getProduct(id, true))
-    );
+    await Promise.allSettled([
+      getShipping(),
+      ...Object.keys(state.items).map(id => getProduct(id, true))
+    ]);
 
     refreshing = false;
     renderCart();
@@ -732,7 +756,12 @@
     }
 
     .cart-row-info { min-width: 0; }
-    .cart-row-info a { color: #736359; font-weight: bold; }
+
+    .cart-row-info a {
+      color: #736359;
+      font-weight: bold;
+    }
+
     .cart-row-info p { margin: 5px 0 0; }
 
     .cart-controls {
@@ -746,8 +775,16 @@
     .cart-remove { font-size: .85em !important; }
     .cart-totals { padding: 20px 0; }
     .cart-totals p { margin: 5px 0; }
-    .cart-totals strong { display: block; margin-top: 12px; }
-    .cart-note { font-size: .9em; color: #7a706b; }
+
+    .cart-totals strong {
+      display: block;
+      margin-top: 12px;
+    }
+
+    .cart-note {
+      font-size: .9em;
+      color: #7a706b;
+    }
 
     .shop-button:disabled,
     .cart-controls button:disabled {
@@ -756,7 +793,11 @@
     }
 
     @media (max-width: 550px) {
-      .cart-row { align-items: start; flex-direction: column; }
+      .cart-row {
+        align-items: start;
+        flex-direction: column;
+      }
+
       .cart-controls { justify-content: flex-start; }
       .cart-panel { padding: 20px; }
     }
@@ -765,6 +806,7 @@
   document.head.append(style);
 
   window.Shop = {
+    getShipping,
     listProducts,
     getProduct,
     getStock,
