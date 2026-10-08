@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: timdekruyf07-dotcom/website-kaars
+  repo: PriscillaLeeuwendal/website-kaars
   branch: main
   client_id: Ov23ctS2qzGMaPsJh1BA
 
