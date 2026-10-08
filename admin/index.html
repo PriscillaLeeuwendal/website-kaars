@@ -18,7 +18,7 @@
       border-radius: 8px;
       background: #faf7f2;
       color: #3d3024;
-      box-shadow: 0 3px 12px rgba(0, 0, 0, .2);
+      box-shadow: 0 3px 12px #0003;
       font: 14px/1.5 Arial, sans-serif;
       max-height: calc(100dvh - 40px);
       overflow: auto;
@@ -45,7 +45,7 @@
     }
 
     #website-beheer button,
-    #website-beheer .voorraad-link {
+    #website-beheer a {
       display: inline-block;
       padding: 10px 12px;
       margin: 4px 0;
@@ -59,7 +59,7 @@
     }
 
     #website-beheer button:hover,
-    #website-beheer .voorraad-link:hover {
+    #website-beheer a:hover {
       background: #594c44;
     }
 
@@ -73,18 +73,12 @@
       outline-offset: 3px;
     }
 
-    #website-beheer .website-buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+    #website-open {
+      background: #45694b !important;
     }
 
-    #website-beheer #website-open {
-      background: #45694b;
-    }
-
-    #website-beheer #website-close {
-      background: #8b4437;
+    #website-close {
+      background: #8b4437 !important;
     }
 
     #website-status {
@@ -94,12 +88,18 @@
     #website-result {
       overflow-wrap: anywhere;
     }
+
+    #website-beheer hr {
+      border: 0;
+      border-top: 1px solid #d7c5ae;
+      margin: 18px 0;
+    }
   </style>
 </head>
 
 <body>
   <details id="website-beheer">
-    <summary>Website en voorraad beheren</summary>
+    <summary>Website, verzending en voorraad beheren</summary>
 
     <p id="website-status" role="status">
       Status wordt opgehaald…
@@ -122,26 +122,49 @@
       </button>
     </form>
 
-    <div class="website-buttons">
-      <button id="website-open" type="button" disabled>
-        Website openen
-      </button>
+    <button id="website-open" type="button" disabled>
+      Website openen
+    </button>
 
-      <button id="website-close" type="button" disabled>
-        Website sluiten
+    <button id="website-close" type="button" disabled>
+      Website sluiten
+    </button>
+
+    <hr>
+
+    <form id="shipping-form">
+      <label for="shipping-price">
+        Verzendkosten binnen Nederland (€)
+      </label>
+
+      <input
+        id="shipping-price"
+        type="text"
+        inputmode="decimal"
+        placeholder="7,95"
+        disabled
+        required
+      >
+
+      <button id="shipping-save" type="submit" disabled>
+        Verzendkosten opslaan
       </button>
-    </div>
+    </form>
+
+    <p>
+      Wijzigingen gelden voor nieuwe bestellingen.
+      Bestaande bestellingen houden hun oorspronkelijke
+      verzendkosten.
+    </p>
 
     <p id="website-result" role="status" aria-live="polite"></p>
 
     <button id="website-refresh" type="button">
-      Status opnieuw ophalen
+      Instellingen opnieuw ophalen
     </button>
 
     <p>
-      <a class="voorraad-link" href="voorraad.html">
-        Voorraad beheren
-      </a>
+      <a href="voorraad.html">Voorraad beheren</a>
     </p>
   </details>
 
@@ -150,39 +173,52 @@
       const API =
         'https://licht-en-liefde-api.timdekruyf07.workers.dev';
 
-      const panel = document.getElementById('website-beheer');
-      const password = document.getElementById('website-password');
-      const openButton = document.getElementById('website-open');
-      const closeButton = document.getElementById('website-close');
-      const result = document.getElementById('website-result');
+      const get = id => document.getElementById(id);
 
       let token = '';
       let state = null;
+      let shipping = null;
       let busy = false;
 
       function render() {
-        document.getElementById('website-status').textContent =
-          state
-            ? (
-                state.is_open
-                  ? 'Website is OPEN'
-                  : 'Website is GESLOTEN'
-              )
-            : 'Website-status is nog niet beschikbaar';
+        get('website-status').textContent = state
+          ? (
+              state.is_open
+                ? 'Website is OPEN'
+                : 'Website is GESLOTEN'
+            )
+          : 'Website-status is nog niet beschikbaar';
 
-        openButton.disabled =
+        get('website-open').disabled =
           busy || !token || !state || state.is_open;
 
-        closeButton.disabled =
+        get('website-close').disabled =
           busy || !token || !state || !state.is_open;
 
-        document.getElementById('website-unlock').disabled = busy;
-        document.getElementById('website-refresh').disabled = busy;
+        get('website-unlock').disabled = busy;
+        get('website-refresh').disabled = busy;
+
+        get('shipping-price').disabled =
+          busy || !token || !shipping;
+
+        get('shipping-save').disabled =
+          busy || !token || !shipping;
       }
 
-      async function request(path, options = {}) {
+      async function request(path, body) {
         const response = await fetch(API + path, {
-          ...options,
+          method: body === undefined ? 'GET' : 'PUT',
+          headers: {
+            ...(token ? {
+              Authorization: 'Bearer ' + token
+            } : {}),
+            ...(body === undefined ? {} : {
+              'Content-Type': 'application/json'
+            })
+          },
+          body: body === undefined
+            ? undefined
+            : JSON.stringify(body),
           cache: 'no-store',
           credentials: 'omit',
           signal: AbortSignal.timeout(15000)
@@ -199,41 +235,59 @@
           throw error;
         }
 
-        if (typeof data.is_open !== 'boolean') {
-          throw new Error('Ongeldige website-status.');
-        }
-
         return data;
       }
 
-      async function loadStatus() {
+      function failure(error) {
+        if (error.status === 401) token = '';
+
+        get('website-result').textContent =
+          error.message +
+          ' Haal de instellingen opnieuw op.';
+      }
+
+      async function load() {
         if (busy) return;
 
         busy = true;
-        result.textContent = 'Status ophalen…';
         render();
+
+        get('website-result').textContent =
+          'Instellingen ophalen…';
 
         try {
           state = await request(
-            token ? '/admin/site-state' : '/site-state',
-            {
-              headers: token
-                ? { Authorization: 'Bearer ' + token }
-                : {}
-            }
+            token ? '/admin/site-state' : '/site-state'
           );
 
-          result.textContent = token
+          if (typeof state.is_open !== 'boolean') {
+            throw new Error('Ongeldige website-status.');
+          }
+
+          shipping = token
+            ? await request('/admin/shipping')
+            : null;
+
+          if (shipping) {
+            if (
+              !Number.isSafeInteger(shipping.shipping_cents) ||
+              !Number.isSafeInteger(shipping.version)
+            ) {
+              throw new Error('Ongeldige verzendkosten.');
+            }
+
+            get('shipping-price').value =
+              (shipping.shipping_cents / 100)
+                .toFixed(2)
+                .replace('.', ',');
+          }
+
+          get('website-result').textContent = token
             ? 'De bediening is ontgrendeld.'
             : '';
         } catch (error) {
-          state = null;
-
-          if (error.status === 401) {
-            token = '';
-          }
-
-          result.textContent = error.message;
+          shipping = null;
+          failure(error);
         } finally {
           busy = false;
           render();
@@ -244,78 +298,126 @@
         if (busy || !token || !state) return;
 
         busy = true;
-
-        result.textContent = isOpen
-          ? 'Website openen…'
-          : 'Website sluiten…';
-
         render();
 
         try {
           state = await request('/admin/site-state', {
-            method: 'PUT',
-            headers: {
-              Authorization: 'Bearer ' + token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              is_open: isOpen,
-              version: state.version
-            })
+            is_open: isOpen,
+            version: state.version
           });
 
-          result.textContent = state.is_open
-            ? 'De website is geopend. Bezoekers kunnen de website gebruiken.'
-            : 'De website is gesloten. Nieuwe bestellingen zijn geblokkeerd.';
+          get('website-result').textContent =
+            state.is_open
+              ? 'De website is geopend.'
+              : 'De website is gesloten. Nieuwe bestellingen zijn geblokkeerd.';
         } catch (error) {
           state = null;
-
-          if (error.status === 401) {
-            token = '';
-          }
-
-          result.textContent =
-            error.message + ' Klik op Status opnieuw ophalen.';
+          failure(error);
         } finally {
           busy = false;
           render();
         }
       }
 
-      document.getElementById('website-login')
-        .addEventListener('submit', event => {
+      get('shipping-form').addEventListener(
+        'submit',
+        async event => {
+          event.preventDefault();
+
+          if (busy || !token || !shipping) return;
+
+          const value = get('shipping-price').value
+            .trim()
+            .replace(',', '.');
+
+          if (!/^\d{1,4}(\.\d{1,2})?$/.test(value)) {
+            get('website-result').textContent =
+              'Vul bijvoorbeeld 7,95 in, met maximaal twee decimalen.';
+            return;
+          }
+
+          const [whole, fraction = ''] = value.split('.');
+
+          const cents =
+            Number(whole) * 100 +
+            Number(fraction.padEnd(2, '0'));
+
+          if (cents > 100000) {
+            get('website-result').textContent =
+              'Gebruik een bedrag tussen 0 en 1000 euro.';
+            return;
+          }
+
+          busy = true;
+          render();
+
+          try {
+            shipping = await request('/admin/shipping', {
+              shipping_cents: cents,
+              version: shipping.version
+            });
+
+            get('shipping-price').value =
+              (shipping.shipping_cents / 100)
+                .toFixed(2)
+                .replace('.', ',');
+
+            get('website-result').textContent =
+              'Verzendkosten opgeslagen voor nieuwe bestellingen.';
+          } catch (error) {
+            shipping = null;
+            failure(error);
+          } finally {
+            busy = false;
+            render();
+          }
+        }
+      );
+
+      get('website-login').addEventListener(
+        'submit',
+        event => {
           event.preventDefault();
 
           if (busy) return;
 
-          token = password.value;
-          password.value = '';
+          token = get('website-password').value;
+          get('website-password').value = '';
 
-          loadStatus();
-        });
-
-      openButton.addEventListener('click', () => {
-        changeState(true);
-      });
-
-      closeButton.addEventListener('click', () => {
-        changeState(false);
-      });
-
-      document.getElementById('website-refresh')
-        .addEventListener('click', loadStatus);
-
-      panel.addEventListener('toggle', () => {
-        if (panel.open) {
-          loadStatus();
-        } else {
-          token = '';
-          password.value = '';
-          render();
+          load();
         }
-      });
+      );
 
-      loadStatus();
+      get('website-open').addEventListener(
+        'click',
+        () => changeState(true)
+      );
+
+      get('website-close').addEventListener(
+        'click',
+        () => changeState(false)
+      );
+
+      get('website-refresh').addEventListener(
+        'click',
+        load
+      );
+
+      get('website-beheer').addEventListener(
+        'toggle',
+        () => {
+          if (get('website-beheer').open) {
+            load();
+          } else {
+            token = '';
+            shipping = null;
+            get('website-password').value = '';
+            render();
+          }
+        }
+      );
+
+      load();
     })();
   </script>
 
